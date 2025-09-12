@@ -104,6 +104,15 @@
         .message-box.show {
             opacity: 1;
         }
+        
+        .modal {
+            display: none;
+            z-index: 100;
+        }
+
+        .modal.open {
+            display: flex;
+        }
 
         /* Custom Styles for table */
         th, td {
@@ -125,7 +134,6 @@
         .currency-input {
             padding-left: 28px !important;
         }
-
     </style>
 </head>
 <body class="antialiased dark:bg-gray-900 dark:text-gray-100">
@@ -133,7 +141,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, serverTimestamp, getDocs, runTransaction, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Set Firebase debug log level
@@ -149,11 +157,13 @@
         const sections = document.querySelectorAll('.section');
         const loadingIndicator = document.getElementById('loading-indicator');
         const mainContent = document.getElementById('main-content');
-
+        
         const totalExpensesSpan = document.getElementById('total-expenses');
         const totalIncomeSpan = document.getElementById('total-income');
         const netProfitSpan = document.getElementById('net-profit');
 
+        const transactionTabLinks = document.querySelectorAll('.transaction-tab-link');
+        const transactionTabContent = document.querySelectorAll('.transaction-tab-content');
         const expenseForm = document.getElementById('expense-form');
         const invoiceForm = document.getElementById('invoice-form');
         const billForm = document.getElementById('bill-form');
@@ -164,9 +174,15 @@
         const plReportTableBody = document.getElementById('pl-report-table-body');
         
         const messageBox = document.getElementById('message-box');
-        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const darkModeToggleHeader = document.getElementById('dark-mode-toggle-header');
+        const darkModeToggleSettings = document.getElementById('dark-mode-toggle-settings');
         const userIdDisplay = document.getElementById('user-id-display');
         const companyIdDisplay = document.getElementById('company-id-display');
+
+        const deleteModal = document.getElementById('delete-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        let deleteCallback = null;
 
         // --- Global State ---
         let db;
@@ -187,7 +203,7 @@
          */
         function showMessageBox(message, type) {
             messageBox.textContent = message;
-            messageBox.className = `message-box show p-4 mt-4 rounded-lg text-center font-medium ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            messageBox.className = `message-box show p-4 rounded-lg shadow-xl text-center font-medium ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
             setTimeout(() => {
                 messageBox.classList.remove('show');
             }, 3000);
@@ -209,6 +225,36 @@
             if (dataLoaded.expenses && dataLoaded.invoices && dataLoaded.bills) {
                 loadingIndicator.style.display = 'none';
                 mainContent.classList.remove('hidden');
+                // Set the initial active section
+                document.querySelector('.nav-link.active').click();
+            }
+        }
+
+        /**
+         * Shows the custom modal for delete confirmation.
+         * @param {string} collectionName - The Firestore collection name.
+         * @param {string} docId - The document ID to delete.
+         */
+        function showDeleteModal(collectionName, docId) {
+            deleteModal.classList.add('open');
+            deleteCallback = () => {
+                deleteDocFromFirestore(collectionName, docId);
+                deleteModal.classList.remove('open');
+            };
+        }
+
+        /**
+         * Deletes a document from a specified collection after confirmation.
+         * @param {string} collectionName - The name of the Firestore collection.
+         * @param {string} docId - The ID of the document to delete.
+         */
+        async function deleteDocFromFirestore(collectionName, docId) {
+            try {
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/${collectionName}`, docId));
+                showMessageBox(`${collectionName.slice(0, -1)} deleted successfully.`, 'success');
+            } catch (e) {
+                console.error(`Error deleting ${collectionName.slice(0, -1)}:`, e);
+                showMessageBox(`Failed to delete ${collectionName.slice(0, -1)}.`, 'error');
             }
         }
 
@@ -229,9 +275,7 @@
                         userId = user.uid;
                         userIdDisplay.textContent = `User ID: ${userId}`;
                         companyIdDisplay.textContent = `Company ID: ${userId}`;
-                        
                         startRealtimeListeners();
-                        console.log("User authenticated with UID:", userId);
                     } else {
                         console.log("User not authenticated, signing in anonymously...");
                         await signInAnonymously(auth);
@@ -241,11 +285,7 @@
                 // Sign in with custom token if available
                 if (initialAuthToken) {
                     await signInWithCustomToken(auth, initialAuthToken);
-                    console.log("Signed in with custom token.");
-                } else {
-                    console.log("No custom token available.");
                 }
-
             } catch (e) {
                 console.error("Error initializing Firebase:", e);
                 showMessageBox("Error initializing application. Please check console.", 'error');
@@ -256,56 +296,36 @@
          * Starts real-time listeners for all financial data.
          */
         function startRealtimeListeners() {
-            // Unsubscribe existing listeners to prevent duplicates
             unsubscribeListeners.forEach(unsub => unsub());
             unsubscribeListeners = [];
+            dataLoaded = { expenses: false, invoices: false, bills: false };
 
-            // Listen for expenses
-            const expensesQuery = collection(db, `artifacts/${appId}/users/${userId}/expenses`);
-            const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
-                expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderExpenses(expensesData);
-                updateDashboardSummary();
-                dataLoaded.expenses = true;
-                hideLoading();
-                console.log("Expenses updated in real-time.");
-            }, (error) => {
-                console.error("Error fetching expenses:", error);
-                showMessageBox("Error fetching expenses.", 'error');
+            const collections = ['expenses', 'invoices', 'bills'];
+            collections.forEach(collectionName => {
+                const q = collection(db, `artifacts/${appId}/users/${userId}/${collectionName}`);
+                const unsub = onSnapshot(q, (snapshot) => {
+                    if (collectionName === 'expenses') {
+                        expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderExpenses(expensesData);
+                        dataLoaded.expenses = true;
+                    } else if (collectionName === 'invoices') {
+                        invoicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderInvoices(invoicesData);
+                        dataLoaded.invoices = true;
+                    } else if (collectionName === 'bills') {
+                        billsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderBills(billsData);
+                        dataLoaded.bills = true;
+                    }
+                    updateDashboardSummary();
+                    renderPLReport();
+                    hideLoading();
+                }, (error) => {
+                    console.error(`Error fetching ${collectionName}:`, error);
+                    showMessageBox(`Error fetching ${collectionName}.`, 'error');
+                });
+                unsubscribeListeners.push(unsub);
             });
-            unsubscribeListeners.push(unsubExpenses);
-
-            // Listen for invoices (income)
-            const invoicesQuery = collection(db, `artifacts/${appId}/users/${userId}/invoices`);
-            const unsubInvoices = onSnapshot(invoicesQuery, (snapshot) => {
-                invoicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderInvoices(invoicesData);
-                updateDashboardSummary();
-                renderPLReport();
-                dataLoaded.invoices = true;
-                hideLoading();
-                console.log("Invoices updated in real-time.");
-            }, (error) => {
-                console.error("Error fetching invoices:", error);
-                showMessageBox("Error fetching invoices.", 'error');
-            });
-            unsubscribeListeners.push(unsubInvoices);
-
-            // Listen for bills
-            const billsQuery = collection(db, `artifacts/${appId}/users/${userId}/bills`);
-            const unsubBills = onSnapshot(billsQuery, (snapshot) => {
-                billsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderBills(billsData);
-                updateDashboardSummary();
-                renderPLReport();
-                dataLoaded.bills = true;
-                hideLoading();
-                console.log("Bills updated in real-time.");
-            }, (error) => {
-                console.error("Error fetching bills:", error);
-                showMessageBox("Error fetching bills.", 'error');
-            });
-            unsubscribeListeners.push(unsubBills);
         }
 
         /**
@@ -325,11 +345,7 @@
 
             try {
                 await addDoc(collection(db, `artifacts/${appId}/users/${userId}/expenses`), {
-                    title,
-                    amount,
-                    category,
-                    date,
-                    createdAt: serverTimestamp()
+                    title, amount, category, date, createdAt: serverTimestamp()
                 });
                 showMessageBox("Expense added successfully!", 'success');
                 expenseForm.reset();
@@ -356,12 +372,7 @@
 
             try {
                 await addDoc(collection(db, `artifacts/${appId}/users/${userId}/invoices`), {
-                    title,
-                    amount,
-                    client,
-                    date,
-                    status: 'Unpaid', // Default status
-                    createdAt: serverTimestamp()
+                    title, amount, client, date, status: 'Unpaid', createdAt: serverTimestamp()
                 });
                 showMessageBox("Invoice created successfully!", 'success');
                 invoiceForm.reset();
@@ -388,12 +399,7 @@
 
             try {
                 await addDoc(collection(db, `artifacts/${appId}/users/${userId}/bills`), {
-                    title,
-                    amount,
-                    vendor,
-                    date,
-                    status: 'Unpaid', // Default status
-                    createdAt: serverTimestamp()
+                    title, amount, vendor, date, status: 'Unpaid', createdAt: serverTimestamp()
                 });
                 showMessageBox("Bill created successfully!", 'success');
                 billForm.reset();
@@ -403,36 +409,13 @@
             }
         }
 
-        /**
-         * Deletes a document from a specified collection.
-         * @param {string} collectionName - The name of the Firestore collection.
-         * @param {string} docId - The ID of the document to delete.
-         */
-        async function deleteDocument(collectionName, docId) {
-            if (!confirm(`Are you sure you want to delete this ${collectionName.slice(0, -1)}?`)) {
-                return;
-            }
-            try {
-                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/${collectionName}`, docId));
-                showMessageBox(`${collectionName.slice(0, -1)} deleted successfully.`, 'success');
-            } catch (e) {
-                console.error(`Error deleting ${collectionName.slice(0, -1)}:`, e);
-                showMessageBox(`Failed to delete ${collectionName.slice(0, -1)}.`, 'error');
-            }
-        }
-
         // --- Rendering Functions ---
 
-        /**
-         * Renders the list of expenses in the dashboard table.
-         * @param {Array} expenses - The expenses data array.
-         */
         function renderExpenses(expenses) {
             expenseListTableBody.innerHTML = '';
             if (expenses.length === 0) {
                 expenseListTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">No expenses recorded yet.</td></tr>`;
             } else {
-                // Sort expenses by date in descending order
                 const sortedExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
                 sortedExpenses.forEach(exp => {
                     const row = document.createElement('tr');
@@ -443,7 +426,7 @@
                         <td class="px-6 py-4 font-semibold text-red-600 dark:text-red-400">${formatCurrency(exp.amount)}</td>
                         <td class="px-6 py-4">${exp.date}</td>
                         <td class="px-6 py-4 text-right">
-                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('expenses', '${exp.id}')">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="showDeleteModal('expenses', '${exp.id}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -453,10 +436,6 @@
             }
         }
         
-        /**
-         * Renders the list of invoices.
-         * @param {Array} invoices - The invoices data array.
-         */
         function renderInvoices(invoices) {
             invoiceListTableBody.innerHTML = '';
             if (invoices.length === 0) {
@@ -471,7 +450,7 @@
                         <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">${formatCurrency(inv.amount)}</td>
                         <td class="px-6 py-4">${inv.date}</td>
                         <td class="px-6 py-4 text-right">
-                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('invoices', '${inv.id}')">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="showDeleteModal('invoices', '${inv.id}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -481,10 +460,6 @@
             }
         }
         
-        /**
-         * Renders the list of bills.
-         * @param {Array} bills - The bills data array.
-         */
         function renderBills(bills) {
             billListTableBody.innerHTML = '';
             if (bills.length === 0) {
@@ -499,7 +474,7 @@
                         <td class="px-6 py-4 font-semibold text-red-600 dark:text-red-400">${formatCurrency(bill.amount)}</td>
                         <td class="px-6 py-4">${bill.date}</td>
                         <td class="px-6 py-4 text-right">
-                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('bills', '${bill.id}')">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="showDeleteModal('bills', '${bill.id}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </td>
@@ -509,9 +484,6 @@
             }
         }
 
-        /**
-         * Updates the dashboard summary with totals.
-         */
         function updateDashboardSummary() {
             const totalExpenses = expensesData.reduce((sum, exp) => sum + exp.amount, 0);
             const totalIncome = invoicesData.reduce((sum, inv) => sum + inv.amount, 0);
@@ -524,9 +496,6 @@
             netProfitSpan.classList.toggle('text-red-600', netProfit < 0);
         }
 
-        /**
-         * Renders the Profit & Loss report.
-         */
         function renderPLReport() {
             plReportTableBody.innerHTML = '';
 
@@ -555,9 +524,6 @@
 
         // --- UI & Navigation ---
 
-        /**
-         * Handles navigation clicks.
-         */
         function handleNavigation(event) {
             event.preventDefault();
             const targetSectionId = event.currentTarget.dataset.section;
@@ -569,35 +535,39 @@
             document.getElementById(targetSectionId).classList.add('active');
         }
 
-        /**
-         * Toggles dark mode and saves preference.
-         */
+        function handleTransactionTabChange(event) {
+            event.preventDefault();
+            const targetTab = event.currentTarget.dataset.tab;
+
+            transactionTabLinks.forEach(link => link.classList.remove('bg-gray-200', 'dark:bg-gray-700'));
+            event.currentTarget.classList.add('bg-gray-200', 'dark:bg-gray-700');
+
+            transactionTabContent.forEach(content => content.classList.add('hidden'));
+            document.getElementById(targetTab).classList.remove('hidden');
+        }
+
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
             const isDarkMode = document.body.classList.contains('dark');
             localStorage.setItem('darkMode', isDarkMode);
+            darkModeToggleSettings.checked = isDarkMode;
+            darkModeToggleHeader.querySelector('i').className = isDarkMode ? 'fas fa-sun text-lg' : 'fas fa-moon text-lg';
         }
 
-        /**
-         * Loads dark mode preference from local storage.
-         */
         function loadDarkModePreference() {
             const isDarkMode = localStorage.getItem('darkMode') === 'true';
             if (isDarkMode) {
                 document.body.classList.add('dark');
+                darkModeToggleHeader.querySelector('i').className = 'fas fa-sun text-lg';
             }
         }
 
         // --- Initialization ---
 
-        /**
-         * Initializes the application.
-         */
         document.addEventListener('DOMContentLoaded', () => {
             loadDarkModePreference();
             initializeFirebase();
 
-            // Set default date for forms
             const today = new Date().toISOString().split('T')[0];
             const expenseDateInput = document.getElementById('expense-date');
             const invoiceDateInput = document.getElementById('invoice-date');
@@ -607,15 +577,20 @@
             if (invoiceDateInput) invoiceDateInput.value = today;
             if (billDateInput) billDateInput.value = today;
 
-            // Attach event listeners
             expenseForm.addEventListener('submit', addExpense);
             invoiceForm.addEventListener('submit', addInvoice);
             billForm.addEventListener('submit', addBill);
-            darkModeToggle.addEventListener('click', toggleDarkMode);
+            darkModeToggleHeader.addEventListener('click', toggleDarkMode);
+            darkModeToggleSettings.addEventListener('change', toggleDarkMode);
             navLinks.forEach(link => link.addEventListener('click', handleNavigation));
+            transactionTabLinks.forEach(link => link.addEventListener('click', handleTransactionTabChange));
+            confirmDeleteBtn.addEventListener('click', () => {
+                if (deleteCallback) deleteCallback();
+            });
+            cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.remove('open'));
 
-            // Expose function to global scope for button onclicks
-            window.deleteDocument = deleteDocument;
+            // Expose function to global scope
+            window.showDeleteModal = showDeleteModal;
         });
     </script>
 
@@ -640,22 +615,23 @@
                     </nav>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="dark-mode-toggle" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200">
+                    <button id="dark-mode-toggle-header" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200">
                         <i class="fas fa-moon text-lg"></i>
                     </button>
                 </div>
             </div>
         </header>
 
+        <!-- Initial Loading Spinner -->
+        <div id="loading-indicator" class="flex justify-center items-center h-screen">
+            <div class="spinner"></div>
+        </div>
+
         <!-- Main Content Wrapper -->
         <div id="main-content" class="hidden">
             <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div id="loading-indicator" class="flex justify-center items-center h-48">
-                    <div class="spinner"></div>
-                </div>
-
                 <!-- Dashboard Section -->
-                <section id="dashboard" class="section active px-4 py-6">
+                <section id="dashboard" class="section px-4 py-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         <!-- Total Income Card -->
                         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
@@ -675,7 +651,7 @@
                     </div>
 
                     <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
-                        <h2 class="text-xl font-bold mb-4">Latest Transactions</h2>
+                        <h2 class="text-xl font-bold mb-4">Latest Expenses</h2>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead>
@@ -699,10 +675,15 @@
                 
                 <!-- Transactions Section -->
                 <section id="transactions" class="section px-4 py-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Add Expense Card -->
-                        <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                            <h2 class="text-xl font-bold mb-4">Add New Expense</h2>
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Add a Transaction</h2>
+                        <div class="flex mb-4 border-b border-gray-200 dark:border-gray-700">
+                            <button class="transaction-tab-link py-2 px-4 font-medium text-sm rounded-t-lg bg-gray-200 dark:bg-gray-700 transition" data-tab="expense-tab">Expense</button>
+                            <button class="transaction-tab-link py-2 px-4 font-medium text-sm rounded-t-lg transition" data-tab="invoice-tab">Invoice</button>
+                            <button class="transaction-tab-link py-2 px-4 font-medium text-sm rounded-t-lg transition" data-tab="bill-tab">Bill</button>
+                        </div>
+                        
+                        <div id="expense-tab" class="transaction-tab-content">
                             <form id="expense-form" class="space-y-4">
                                 <div>
                                     <label for="expense-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
@@ -739,9 +720,7 @@
                             </form>
                         </div>
 
-                        <!-- Add Invoice Card -->
-                        <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                            <h2 class="text-xl font-bold mb-4">Create New Invoice</h2>
+                        <div id="invoice-tab" class="transaction-tab-content hidden">
                             <form id="invoice-form" class="space-y-4">
                                 <div>
                                     <label for="invoice-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Title</label>
@@ -767,33 +746,33 @@
                                 </button>
                             </form>
                         </div>
-                    </div>
-                    <div class="card p-6 mt-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-                        <h2 class="text-xl font-bold mb-4">Add New Bill</h2>
-                        <form id="bill-form" class="space-y-4">
-                            <div>
-                                <label for="bill-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                                <input type="text" id="bill-title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="bill-vendor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vendor Name</label>
-                                <input type="text" id="bill-vendor" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            </div>
-                            <div>
-                                <label for="bill-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-                                <div class="relative mt-1">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">₹</span>
-                                    <input type="number" id="bill-amount" step="0.01" required class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm pl-7 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+
+                        <div id="bill-tab" class="transaction-tab-content hidden">
+                            <form id="bill-form" class="space-y-4">
+                                <div>
+                                    <label for="bill-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                                    <input type="text" id="bill-title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 </div>
-                            </div>
-                            <div>
-                                <label for="bill-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill Date</label>
-                                <input type="date" id="bill-date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            </div>
-                            <button type="submit" class="w-full primary-btn py-2 px-4 rounded-md shadow-sm text-sm font-medium">
-                                <i class="fas fa-receipt mr-2"></i> Add Bill
-                            </button>
-                        </form>
+                                <div>
+                                    <label for="bill-vendor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vendor Name</label>
+                                    <input type="text" id="bill-vendor" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="bill-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                    <div class="relative mt-1">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">₹</span>
+                                        <input type="number" id="bill-amount" step="0.01" required class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm pl-7 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="bill-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill Date</label>
+                                    <input type="date" id="bill-date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <button type="submit" class="w-full primary-btn py-2 px-4 rounded-md shadow-sm text-sm font-medium">
+                                    <i class="fas fa-receipt mr-2"></i> Add Bill
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </section>
 
@@ -873,9 +852,10 @@
                         <h2 class="text-xl font-bold mb-4">Settings</h2>
                         <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                             <span class="font-medium">Dark Mode</span>
-                            <button id="dark-mode-toggle" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200 dark:bg-blue-600" role="switch" aria-checked="false">
-                                <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white dark:bg-blue-200 shadow transform ring-0 transition ease-in-out duration-200 translate-x-0 dark:translate-x-5"></span>
-                            </button>
+                            <label for="dark-mode-toggle-settings" class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dark-mode-toggle-settings" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            </label>
                         </div>
                         <div class="flex flex-col space-y-2 text-sm text-gray-500 dark:text-gray-400">
                             <span id="user-id-display">User ID: N/A</span>
@@ -885,7 +865,19 @@
                 </section>
             </main>
         </div>
-        <div id="message-box" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"></div>
+    </div>
+    <div id="message-box" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"></div>
+
+    <!-- Custom Delete Modal -->
+    <div id="delete-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-[1000]">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-96 max-w-lg">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Confirm Deletion</h3>
+            <p class="text-gray-700 dark:text-gray-300">Are you sure you want to delete this record? This action cannot be undone.</p>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button id="cancel-delete-btn" class="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Cancel</button>
+                <button id="confirm-delete-btn" class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">Delete</button>
+            </div>
+        </div>
     </div>
 
 </body>
