@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetBuddy Business</title>
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4299e1; /* Blue-400 */
+            --primary-dark-color: #3182ce; /* Blue-500 */
+            --text-color: #1a202c; /* Gray-900 */
+            --text-color-dark: #f7fafc; /* Gray-100 */
+            --bg-color: #edf2f7; /* Gray-200 */
+            --bg-dark-color: #171923; /* Gray-900 (custom) */
+            --card-bg-color: #ffffff;
+            --card-bg-dark-color: #2d3748; /* Gray-800 */
+            --border-color: #e2e8f0; /* Gray-300 */
+            --border-dark-color: #4a5568; /* Gray-600 */
+        }
+
+        body.dark {
+            --text-color: var(--text-color-dark);
+            --bg-color: var(--bg-dark-color);
+            --card-bg-color: var(--card-bg-dark-color);
+            --border-color: var(--border-dark-color);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .primary-btn:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-1px);
+        }
+        
+        .success-btn {
+            background-color: #48bb78; /* Green-500 */
+            color: white;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        
+        .success-btn:hover {
+            background-color: #38a169; /* Green-600 */
+            transform: translateY(-1px);
+        }
+
+        .card {
+            background-color: var(--card-bg-color);
+            border-color: var(--border-color);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .message-box {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+
+        /* Custom Styles for table */
+        th, td {
+            white-space: nowrap;
+        }
+        
+        .currency-input-container {
+            position: relative;
+        }
+        
+        .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6b7280;
+        }
+        
+        .currency-input {
+            padding-left: 28px !important;
+        }
+
+    </style>
+</head>
+<body class="antialiased dark:bg-gray-900 dark:text-gray-100">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, serverTimestamp, getDocs, runTransaction, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Set Firebase debug log level
+        setLogLevel('debug');
+
+        // --- Firebase Globals (Provided by Canvas Environment) ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- DOM Elements ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.section');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const mainContent = document.getElementById('main-content');
+
+        const totalExpensesSpan = document.getElementById('total-expenses');
+        const totalIncomeSpan = document.getElementById('total-income');
+        const netProfitSpan = document.getElementById('net-profit');
+
+        const expenseForm = document.getElementById('expense-form');
+        const invoiceForm = document.getElementById('invoice-form');
+        const billForm = document.getElementById('bill-form');
+        
+        const expenseListTableBody = document.getElementById('expense-list-table-body');
+        const invoiceListTableBody = document.getElementById('invoice-list-table-body');
+        const billListTableBody = document.getElementById('bill-list-table-body');
+        const plReportTableBody = document.getElementById('pl-report-table-body');
+        
+        const messageBox = document.getElementById('message-box');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const companyIdDisplay = document.getElementById('company-id-display');
+
+        // --- Global State ---
+        let db;
+        let auth;
+        let userId;
+        let expensesData = [];
+        let invoicesData = [];
+        let billsData = [];
+        let unsubscribeListeners = [];
+        let dataLoaded = { expenses: false, invoices: false, bills: false };
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a temporary message box to the user.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success', 'error').
+         */
+        function showMessageBox(message, type) {
+            messageBox.textContent = message;
+            messageBox.className = `message-box show p-4 mt-4 rounded-lg text-center font-medium ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+        
+        /**
+         * Formats a number as currency.
+         * @param {number} amount - The amount to format.
+         * @returns {string} - Formatted currency string.
+         */
+        function formatCurrency(amount) {
+            return `₹${parseFloat(amount).toFixed(2)}`;
+        }
+
+        /**
+         * Hides the loading spinner and shows the main content.
+         */
+        function hideLoading() {
+            if (dataLoaded.expenses && dataLoaded.invoices && dataLoaded.bills) {
+                loadingIndicator.style.display = 'none';
+                mainContent.classList.remove('hidden');
+            }
+        }
+
+        // --- Firebase and Firestore Functions ---
+
+        /**
+         * Initializes Firebase and sets up authentication.
+         */
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Set up authentication state listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User ID: ${userId}`;
+                        companyIdDisplay.textContent = `Company ID: ${userId}`;
+                        
+                        startRealtimeListeners();
+                        console.log("User authenticated with UID:", userId);
+                    } else {
+                        console.log("User not authenticated, signing in anonymously...");
+                        await signInAnonymously(auth);
+                    }
+                });
+
+                // Sign in with custom token if available
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
+                } else {
+                    console.log("No custom token available.");
+                }
+
+            } catch (e) {
+                console.error("Error initializing Firebase:", e);
+                showMessageBox("Error initializing application. Please check console.", 'error');
+            }
+        }
+
+        /**
+         * Starts real-time listeners for all financial data.
+         */
+        function startRealtimeListeners() {
+            // Unsubscribe existing listeners to prevent duplicates
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
+
+            // Listen for expenses
+            const expensesQuery = collection(db, `artifacts/${appId}/users/${userId}/expenses`);
+            const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+                expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderExpenses(expensesData);
+                updateDashboardSummary();
+                dataLoaded.expenses = true;
+                hideLoading();
+                console.log("Expenses updated in real-time.");
+            }, (error) => {
+                console.error("Error fetching expenses:", error);
+                showMessageBox("Error fetching expenses.", 'error');
+            });
+            unsubscribeListeners.push(unsubExpenses);
+
+            // Listen for invoices (income)
+            const invoicesQuery = collection(db, `artifacts/${appId}/users/${userId}/invoices`);
+            const unsubInvoices = onSnapshot(invoicesQuery, (snapshot) => {
+                invoicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderInvoices(invoicesData);
+                updateDashboardSummary();
+                renderPLReport();
+                dataLoaded.invoices = true;
+                hideLoading();
+                console.log("Invoices updated in real-time.");
+            }, (error) => {
+                console.error("Error fetching invoices:", error);
+                showMessageBox("Error fetching invoices.", 'error');
+            });
+            unsubscribeListeners.push(unsubInvoices);
+
+            // Listen for bills
+            const billsQuery = collection(db, `artifacts/${appId}/users/${userId}/bills`);
+            const unsubBills = onSnapshot(billsQuery, (snapshot) => {
+                billsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderBills(billsData);
+                updateDashboardSummary();
+                renderPLReport();
+                dataLoaded.bills = true;
+                hideLoading();
+                console.log("Bills updated in real-time.");
+            }, (error) => {
+                console.error("Error fetching bills:", error);
+                showMessageBox("Error fetching bills.", 'error');
+            });
+            unsubscribeListeners.push(unsubBills);
+        }
+
+        /**
+         * Adds a new expense to Firestore.
+         */
+        async function addExpense(e) {
+            e.preventDefault();
+            const title = e.target.elements['expense-title'].value;
+            const amount = parseFloat(e.target.elements['expense-amount'].value);
+            const category = e.target.elements['expense-category'].value;
+            const date = e.target.elements['expense-date'].value;
+
+            if (!title || isNaN(amount) || amount <= 0 || !category || !date) {
+                showMessageBox("Please fill all expense fields correctly.", 'error');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/users/${userId}/expenses`), {
+                    title,
+                    amount,
+                    category,
+                    date,
+                    createdAt: serverTimestamp()
+                });
+                showMessageBox("Expense added successfully!", 'success');
+                expenseForm.reset();
+            } catch (e) {
+                console.error("Error adding expense:", e);
+                showMessageBox("Failed to add expense. Please try again.", 'error');
+            }
+        }
+
+        /**
+         * Adds a new invoice to Firestore.
+         */
+        async function addInvoice(e) {
+            e.preventDefault();
+            const title = e.target.elements['invoice-title'].value;
+            const amount = parseFloat(e.target.elements['invoice-amount'].value);
+            const client = e.target.elements['invoice-client'].value;
+            const date = e.target.elements['invoice-date'].value;
+
+            if (!title || isNaN(amount) || amount <= 0 || !client || !date) {
+                showMessageBox("Please fill all invoice fields correctly.", 'error');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/users/${userId}/invoices`), {
+                    title,
+                    amount,
+                    client,
+                    date,
+                    status: 'Unpaid', // Default status
+                    createdAt: serverTimestamp()
+                });
+                showMessageBox("Invoice created successfully!", 'success');
+                invoiceForm.reset();
+            } catch (e) {
+                console.error("Error adding invoice:", e);
+                showMessageBox("Failed to create invoice. Please try again.", 'error');
+            }
+        }
+
+        /**
+         * Adds a new bill to Firestore.
+         */
+        async function addBill(e) {
+            e.preventDefault();
+            const title = e.target.elements['bill-title'].value;
+            const amount = parseFloat(e.target.elements['bill-amount'].value);
+            const vendor = e.target.elements['bill-vendor'].value;
+            const date = e.target.elements['bill-date'].value;
+
+            if (!title || isNaN(amount) || amount <= 0 || !vendor || !date) {
+                showMessageBox("Please fill all bill fields correctly.", 'error');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/users/${userId}/bills`), {
+                    title,
+                    amount,
+                    vendor,
+                    date,
+                    status: 'Unpaid', // Default status
+                    createdAt: serverTimestamp()
+                });
+                showMessageBox("Bill created successfully!", 'success');
+                billForm.reset();
+            } catch (e) {
+                console.error("Error adding bill:", e);
+                showMessageBox("Failed to create bill. Please try again.", 'error');
+            }
+        }
+
+        /**
+         * Deletes a document from a specified collection.
+         * @param {string} collectionName - The name of the Firestore collection.
+         * @param {string} docId - The ID of the document to delete.
+         */
+        async function deleteDocument(collectionName, docId) {
+            if (!confirm(`Are you sure you want to delete this ${collectionName.slice(0, -1)}?`)) {
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/${collectionName}`, docId));
+                showMessageBox(`${collectionName.slice(0, -1)} deleted successfully.`, 'success');
+            } catch (e) {
+                console.error(`Error deleting ${collectionName.slice(0, -1)}:`, e);
+                showMessageBox(`Failed to delete ${collectionName.slice(0, -1)}.`, 'error');
+            }
+        }
+
+        // --- Rendering Functions ---
+
+        /**
+         * Renders the list of expenses in the dashboard table.
+         * @param {Array} expenses - The expenses data array.
+         */
+        function renderExpenses(expenses) {
+            expenseListTableBody.innerHTML = '';
+            if (expenses.length === 0) {
+                expenseListTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">No expenses recorded yet.</td></tr>`;
+            } else {
+                // Sort expenses by date in descending order
+                const sortedExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+                sortedExpenses.forEach(exp => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${exp.title}</td>
+                        <td class="px-6 py-4">${exp.category}</td>
+                        <td class="px-6 py-4 font-semibold text-red-600 dark:text-red-400">${formatCurrency(exp.amount)}</td>
+                        <td class="px-6 py-4">${exp.date}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('expenses', '${exp.id}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    expenseListTableBody.appendChild(row);
+                });
+            }
+        }
+        
+        /**
+         * Renders the list of invoices.
+         * @param {Array} invoices - The invoices data array.
+         */
+        function renderInvoices(invoices) {
+            invoiceListTableBody.innerHTML = '';
+            if (invoices.length === 0) {
+                invoiceListTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">No invoices created yet.</td></tr>`;
+            } else {
+                invoices.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(inv => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${inv.title}</td>
+                        <td class="px-6 py-4">${inv.client}</td>
+                        <td class="px-6 py-4 font-semibold text-green-600 dark:text-green-400">${formatCurrency(inv.amount)}</td>
+                        <td class="px-6 py-4">${inv.date}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('invoices', '${inv.id}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    invoiceListTableBody.appendChild(row);
+                });
+            }
+        }
+        
+        /**
+         * Renders the list of bills.
+         * @param {Array} bills - The bills data array.
+         */
+        function renderBills(bills) {
+            billListTableBody.innerHTML = '';
+            if (bills.length === 0) {
+                billListTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400">No bills recorded yet.</td></tr>`;
+            } else {
+                bills.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(bill => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 dark:border-gray-700';
+                    row.innerHTML = `
+                        <td class="px-6 py-4">${bill.title}</td>
+                        <td class="px-6 py-4">${bill.vendor}</td>
+                        <td class="px-6 py-4 font-semibold text-red-600 dark:text-red-400">${formatCurrency(bill.amount)}</td>
+                        <td class="px-6 py-4">${bill.date}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-red-500 hover:text-red-700 transition" onclick="deleteDocument('bills', '${bill.id}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    billListTableBody.appendChild(row);
+                });
+            }
+        }
+
+        /**
+         * Updates the dashboard summary with totals.
+         */
+        function updateDashboardSummary() {
+            const totalExpenses = expensesData.reduce((sum, exp) => sum + exp.amount, 0);
+            const totalIncome = invoicesData.reduce((sum, inv) => sum + inv.amount, 0);
+            const netProfit = totalIncome - totalExpenses;
+
+            totalExpensesSpan.textContent = formatCurrency(totalExpenses);
+            totalIncomeSpan.textContent = formatCurrency(totalIncome);
+            netProfitSpan.textContent = formatCurrency(netProfit);
+            netProfitSpan.classList.toggle('text-green-600', netProfit >= 0);
+            netProfitSpan.classList.toggle('text-red-600', netProfit < 0);
+        }
+
+        /**
+         * Renders the Profit & Loss report.
+         */
+        function renderPLReport() {
+            plReportTableBody.innerHTML = '';
+
+            const income = invoicesData.reduce((sum, inv) => sum + inv.amount, 0);
+            const expenses = expensesData.reduce((sum, exp) => sum + exp.amount, 0);
+            const netProfit = income - expenses;
+
+            const incomeRow = document.createElement('tr');
+            incomeRow.className = 'border-b border-gray-200 dark:border-gray-700';
+            incomeRow.innerHTML = `<td class="px-6 py-4 font-bold">Total Income</td><td class="px-6 py-4 font-bold text-green-600">${formatCurrency(income)}</td>`;
+            plReportTableBody.appendChild(incomeRow);
+
+            const expenseRow = document.createElement('tr');
+            expenseRow.className = 'border-b border-gray-200 dark:border-gray-700';
+            expenseRow.innerHTML = `<td class="px-6 py-4 font-bold">Total Expenses</td><td class="px-6 py-4 font-bold text-red-600">${formatCurrency(expenses)}</td>`;
+            plReportTableBody.appendChild(expenseRow);
+
+            const profitRow = document.createElement('tr');
+            profitRow.className = 'font-extrabold text-lg';
+            profitRow.innerHTML = `
+                <td class="px-6 py-4">Net Profit / Loss</td>
+                <td class="px-6 py-4 ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${formatCurrency(netProfit)}</td>
+            `;
+            plReportTableBody.appendChild(profitRow);
+        }
+
+        // --- UI & Navigation ---
+
+        /**
+         * Handles navigation clicks.
+         */
+        function handleNavigation(event) {
+            event.preventDefault();
+            const targetSectionId = event.currentTarget.dataset.section;
+
+            navLinks.forEach(link => link.classList.remove('text-blue-600', 'font-semibold', 'bg-blue-100', 'dark:text-blue-400', 'dark:bg-gray-700'));
+            event.currentTarget.classList.add('text-blue-600', 'font-semibold', 'bg-blue-100', 'dark:text-blue-400', 'dark:bg-gray-700');
+
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(targetSectionId).classList.add('active');
+        }
+
+        /**
+         * Toggles dark mode and saves preference.
+         */
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+            const isDarkMode = document.body.classList.contains('dark');
+            localStorage.setItem('darkMode', isDarkMode);
+        }
+
+        /**
+         * Loads dark mode preference from local storage.
+         */
+        function loadDarkModePreference() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark');
+            }
+        }
+
+        // --- Initialization ---
+
+        /**
+         * Initializes the application.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDarkModePreference();
+            initializeFirebase();
+
+            // Set default date for forms
+            const today = new Date().toISOString().split('T')[0];
+            const expenseDateInput = document.getElementById('expense-date');
+            const invoiceDateInput = document.getElementById('invoice-date');
+            const billDateInput = document.getElementById('bill-date');
+
+            if (expenseDateInput) expenseDateInput.value = today;
+            if (invoiceDateInput) invoiceDateInput.value = today;
+            if (billDateInput) billDateInput.value = today;
+
+            // Attach event listeners
+            expenseForm.addEventListener('submit', addExpense);
+            invoiceForm.addEventListener('submit', addInvoice);
+            billForm.addEventListener('submit', addBill);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            navLinks.forEach(link => link.addEventListener('click', handleNavigation));
+
+            // Expose function to global scope for button onclicks
+            window.deleteDocument = deleteDocument;
+        });
+    </script>
+
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <span class="text-3xl font-extrabold text-blue-600">BudgetBuddy</span>
+                        <span class="text-lg font-medium text-gray-500 dark:text-gray-400 ml-2">Business</span>
+                    </div>
+                    <nav class="hidden sm:block">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-gray-700" data-section="dashboard">Dashboard</a>
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-700" data-section="transactions">Transactions</a>
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-700" data-section="invoices">Invoices</a>
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-700" data-section="bills">Bills</a>
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-700" data-section="reports">Reports</a>
+                            <a href="#" class="nav-link px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:text-blue-600 hover:bg-gray-100 dark:hover:text-blue-400 dark:hover:bg-gray-700" data-section="settings">Settings</a>
+                        </div>
+                    </nav>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="dark-mode-toggle" class="p-2 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200">
+                        <i class="fas fa-moon text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Wrapper -->
+        <div id="main-content" class="hidden">
+            <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <div id="loading-indicator" class="flex justify-center items-center h-48">
+                    <div class="spinner"></div>
+                </div>
+
+                <!-- Dashboard Section -->
+                <section id="dashboard" class="section active px-4 py-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Total Income Card -->
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Income</h3>
+                            <p id="total-income" class="mt-1 text-3xl font-bold text-green-600">₹0.00</p>
+                        </div>
+                        <!-- Total Expenses Card -->
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase">Total Expenses</h3>
+                            <p id="total-expenses" class="mt-1 text-3xl font-bold text-red-600">₹0.00</p>
+                        </div>
+                        <!-- Net Profit Card -->
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h3 class="text-sm font-semibold text-gray-500 uppercase">Net Profit / Loss</h3>
+                            <p id="net-profit" class="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">₹0.00</p>
+                        </div>
+                    </div>
+
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mb-6">
+                        <h2 class="text-xl font-bold mb-4">Latest Transactions</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">Delete</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expense-list-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Expense data will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Transactions Section -->
+                <section id="transactions" class="section px-4 py-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Add Expense Card -->
+                        <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h2 class="text-xl font-bold mb-4">Add New Expense</h2>
+                            <form id="expense-form" class="space-y-4">
+                                <div>
+                                    <label for="expense-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                                    <input type="text" id="expense-title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="expense-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                    <div class="relative mt-1">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">₹</span>
+                                        <input type="number" id="expense-amount" step="0.01" required class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm pl-7 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="expense-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                                    <select id="expense-category" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="">Select Category</option>
+                                        <option value="Cost of Goods Sold">Cost of Goods Sold</option>
+                                        <option value="Payroll">Payroll</option>
+                                        <option value="Rent">Rent</option>
+                                        <option value="Utilities">Utilities</option>
+                                        <option value="Office Supplies">Office Supplies</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Travel">Travel</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="expense-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                                    <input type="date" id="expense-date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <button type="submit" class="w-full primary-btn py-2 px-4 rounded-md shadow-sm text-sm font-medium">
+                                    <i class="fas fa-plus-circle mr-2"></i> Add Expense
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Add Invoice Card -->
+                        <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                            <h2 class="text-xl font-bold mb-4">Create New Invoice</h2>
+                            <form id="invoice-form" class="space-y-4">
+                                <div>
+                                    <label for="invoice-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Title</label>
+                                    <input type="text" id="invoice-title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="invoice-client" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Client Name</label>
+                                    <input type="text" id="invoice-client" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="invoice-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                    <div class="relative mt-1">
+                                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">₹</span>
+                                        <input type="number" id="invoice-amount" step="0.01" required class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm pl-7 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="invoice-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Invoice Date</label>
+                                    <input type="date" id="invoice-date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <button type="submit" class="w-full success-btn py-2 px-4 rounded-md shadow-sm text-sm font-medium">
+                                    <i class="fas fa-file-invoice-dollar mr-2"></i> Create Invoice
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card p-6 mt-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Add New Bill</h2>
+                        <form id="bill-form" class="space-y-4">
+                            <div>
+                                <label for="bill-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                                <input type="text" id="bill-title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="bill-vendor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Vendor Name</label>
+                                <input type="text" id="bill-vendor" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="bill-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                <div class="relative mt-1">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">₹</span>
+                                    <input type="number" id="bill-amount" step="0.01" required class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm pl-7 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="bill-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bill Date</label>
+                                <input type="date" id="bill-date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <button type="submit" class="w-full primary-btn py-2 px-4 rounded-md shadow-sm text-sm font-medium">
+                                <i class="fas fa-receipt mr-2"></i> Add Bill
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Invoices Section -->
+                <section id="invoices" class="section px-4 py-6">
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Invoices (Accounts Receivable)</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Client</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">Delete</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-list-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Invoice data will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Bills Section -->
+                <section id="bills" class="section px-4 py-6">
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Bills (Accounts Payable)</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Title</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Vendor</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="relative px-6 py-3">
+                                            <span class="sr-only">Delete</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bill-list-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Bill data will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Reports Section -->
+                <section id="reports" class="section px-4 py-6">
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Profit & Loss Report</h2>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Metric</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pl-report-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    <!-- Report data will be rendered here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="section px-4 py-6">
+                    <div class="card p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                        <h2 class="text-xl font-bold mb-4">Settings</h2>
+                        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                            <span class="font-medium">Dark Mode</span>
+                            <button id="dark-mode-toggle" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200 dark:bg-blue-600" role="switch" aria-checked="false">
+                                <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white dark:bg-blue-200 shadow transform ring-0 transition ease-in-out duration-200 translate-x-0 dark:translate-x-5"></span>
+                            </button>
+                        </div>
+                        <div class="flex flex-col space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span id="user-id-display">User ID: N/A</span>
+                            <span id="company-id-display">Company ID: N/A</span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <div id="message-box" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"></div>
+    </div>
+
+</body>
+</html>
