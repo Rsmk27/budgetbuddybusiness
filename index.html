@@ -46,6 +46,8 @@
     <!-- Chart.js and Datalabels Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- html2pdf.js for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-[--bg-color] text-[--text-color] font-[Inter] transition-colors duration-300">
 
@@ -237,8 +239,9 @@
                         <canvas id="quarterlyReportChart"></canvas>
                     </div>
                 </div>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end">
-                    <button id="exportCsvBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end space-x-4">
+                    <button id="exportCsvBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
+                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="downloadPdf">Download Statement</button>
                 </div>
             </section>
             
@@ -294,6 +297,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- PDF content container (hidden from view) -->
+            <div id="pdf-content" class="p-8 hidden"></div>
             
         </main>
     </div>
@@ -347,6 +353,7 @@
                 monthlyReport: "Monthly Report",
                 quarterlyReport: "Quarterly Report",
                 exportCsv: "Export as CSV",
+                downloadPdf: "Download Statement",
                 budgetsTitle: "Budget Goals & Alerts",
                 setBudget: "Set Budget",
                 settingsTitle: "Data & Tips",
@@ -366,7 +373,10 @@
                 confirmDeletion: "Confirm Deletion",
                 deletionMessage: "Are you sure you want to delete all your data? This action cannot be undone.",
                 confirmButton: "Confirm",
-                cancelButton: "Cancel"
+                cancelButton: "Cancel",
+                statementTitle: "Financial Statement",
+                statementSummary: "Summary",
+                statementTransactions: "All Transactions"
             },
             hi: {
                 appName: "बिजनेस बजट बडी",
@@ -403,7 +413,8 @@
                 monthlyReport: "मासिक रिपोर्ट",
                 quarterlyReport: "तिमाही रिपोर्ट",
                 exportCsv: "CSV के रूप में निर्यात करें",
-                budgetsTitle: "बजট লক্ষ্য এবং সতর্কতা",
+                downloadPdf: "स्टेटमेंट डाउनलोड करें",
+                budgetsTitle: "बजट लक्ष्य और সতর্কতা",
                 setBudget: "बजट सेट करें",
                 settingsTitle: "डेटा और টিপস",
                 exportData: "डेटा निर्यात करें (JSON)",
@@ -422,7 +433,10 @@
                 confirmDeletion: "हटाने की पुष्टि करें",
                 deletionMessage: "क्या आप वाकई अपना सारा डेटा हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती है।",
                 confirmButton: "पुष्टि करें",
-                cancelButton: "रद्द करें"
+                cancelButton: "रद्द करें",
+                statementTitle: "वित्तीय विवरण",
+                statementSummary: "सारांश",
+                statementTransactions: "सभी लेनदेन"
             },
             te: {
                 appName: "వ్యాపార బడ్జెట్ బడ్డీ",
@@ -459,6 +473,7 @@
                 monthlyReport: "నెలవారీ నివేదిక",
                 quarterlyReport: "త్రైమాసిక నివేదిక",
                 exportCsv: "CSVగా ఎగుమతి చేయి",
+                downloadPdf: "నివేదికను డౌన్‌లోడ్ చేయండి",
                 budgetsTitle: "బడ్జెట్ లక్ష్యాలు మరియు హెచ్చరికలు",
                 setBudget: "బడ్జెట్ సెట్ చేయండి",
                 settingsTitle: "డేటా మరియు చిట్కాలు",
@@ -478,7 +493,10 @@
                 confirmDeletion: "తొలగింపును నిర్ధారించండి",
                 deletionMessage: "మీరు మీ మొత్తం డేటాను తొలగించాలని అనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
                 confirmButton: "నిర్ధారించండి",
-                cancelButton: "రద్దు చేయి"
+                cancelButton: "రద్దు చేయి",
+                statementTitle: "ఆర్థిక నివేదిక",
+                statementSummary: "సారాంశం",
+                statementTransactions: "అన్ని లావాదేవీలు"
             },
             ta: {
                 appName: "வணிக பட்ஜெட் நண்பர்",
@@ -515,6 +533,7 @@
                 monthlyReport: "மாதாந்திர அறிக்கை",
                 quarterlyReport: "காலாண்டு அறிக்கை",
                 exportCsv: "CSV ஆக ஏற்றுமதி செய்",
+                downloadPdf: "அறிக்கையைப் பதிவிறக்கு",
                 budgetsTitle: "பட்ஜெட் இலக்குகள் மற்றும் எச்சரிக்கைகள்",
                 setBudget: "பட்ஜெட் அமை",
                 settingsTitle: "தரவு மற்றும் குறிப்புகள்",
@@ -534,7 +553,10 @@
                 confirmDeletion: "நீக்குதலை உறுதிப்படுத்தவும்",
                 deletionMessage: "உங்கள் எல்லா தரவையும் நீக்க விரும்புகிறீர்களா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.",
                 confirmButton: "உறுதிப்படுத்து",
-                cancelButton: "ரத்து செய்"
+                cancelButton: "ரத்து செய்",
+                statementTitle: "நிதி அறிக்கை",
+                statementSummary: "சுருக்கம்",
+                statementTransactions: "அனைத்து பரிவர்த்தனைகள்"
             },
             bn: {
                 appName: "ব্যবসা বাজেট বন্ধু",
@@ -571,6 +593,7 @@
                 monthlyReport: "মাসিক রিপোর্ট",
                 quarterlyReport: "ত্রৈমাসিক রিপোর্ট",
                 exportCsv: "CSV হিসাবে এক্সপোর্ট করুন",
+                downloadPdf: "স্টেটমেন্ট ডাউনলোড করুন",
                 budgetsTitle: "বাজেট লক্ষ্য এবং সতর্কতা",
                 setBudget: "বাজেট সেট করুন",
                 settingsTitle: "ডেটা এবং টিপস",
@@ -590,7 +613,10 @@
                 confirmDeletion: "মুছে ফেলার নিশ্চিতকরণ",
                 deletionMessage: "আপনি কি সত্যিই আপনার সমস্ত ডেটা মুছে ফেলতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
                 confirmButton: "নিশ্চিত করুন",
-                cancelButton: "বাতিল করুন"
+                cancelButton: "বাতিল করুন",
+                statementTitle: "আর্থিক বিবৃতি",
+                statementSummary: "সারাংশ",
+                statementTransactions: "সমস্ত লেনদেন"
             },
         };
         
@@ -616,6 +642,8 @@
         const importFile = document.getElementById('importFile');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
         const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const pdfContent = document.getElementById('pdf-content');
 
         let revenueExpensesChart = null;
         let expensePieChart = null;
@@ -1093,6 +1121,89 @@
             URL.revokeObjectURL(url);
         }
 
+        // --- PDF EXPORT LOGIC ---
+        function exportToPdf() {
+            const currentLang = appData.settings.language;
+            const currentTranslations = translations[currentLang] || translations.en;
+            const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
+            const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Generate report chart as an image
+            renderReportsCharts();
+            const monthlyChartImage = document.getElementById('monthlyReportChart').toDataURL('image/png');
+
+            // Build the HTML content for the PDF
+            let pdfHtml = `
+                <div class="p-8 font-sans">
+                    <h1 class="text-3xl font-bold text-center mb-6" style="color: #2563EB;">${currentTranslations.statementTitle}</h1>
+                    
+                    <div class="mb-8">
+                        <h2 class="text-xl font-bold mb-2" style="color: #2563EB;">${currentTranslations.statementSummary}</h2>
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
+                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.revenueCard}</h3>
+                                <p class="text-2xl font-bold" style="color: #10B981;">₹${totalRevenue.toFixed(2)}</p>
+                            </div>
+                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
+                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.expensesCard}</h3>
+                                <p class="text-2xl font-bold" style="color: #DC2626;">₹${totalExpenses.toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.monthlyReport}</h2>
+                        <img src="${monthlyChartImage}" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
+                    </div>
+
+                    <div>
+                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.statementTransactions}</h2>
+                        <table class="w-full text-left border-collapse" style="font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #E5E7EB;">
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDate}</th>
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDescription}</th>
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableCategory}</th>
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableAmount}</th>
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+            allTransactions.forEach(t => {
+                const amountColor = t.type === 'Income' ? '#10B981' : '#DC2626';
+                pdfHtml += `
+                    <tr style="border-bottom: 1px solid #E5E7EB;">
+                        <td class="p-2">${t.date}</td>
+                        <td class="p-2">${t.description}</td>
+                        <td class="p-2">${t.category}</td>
+                        <td class="p-2" style="color: ${amountColor};">₹${t.amount.toFixed(2)}</td>
+                        <td class="p-2">${t.type}</td>
+                    </tr>
+                `;
+            });
+            pdfHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            pdfContent.innerHTML = pdfHtml;
+
+            // Generate the PDF
+            const options = {
+                margin: 1,
+                filename: `financial_statement_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(pdfContent).set(options).save();
+        }
+
         // --- EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
             loadData();
@@ -1161,6 +1272,7 @@
         
         exportCsvBtn.addEventListener('click', exportCsv);
         deleteAllDataBtn.addEventListener('click', deleteAllData);
+        downloadPdfBtn.addEventListener('click', exportToPdf);
     </script>
 
 </body>
