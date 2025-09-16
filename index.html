@@ -129,19 +129,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="revenueCard">
                         <h3 class="text-lg font-semibold text-gray-500 mb-2">Revenue</h3>
-                        <p id="totalRevenue" class="text-3xl font-bold text-[--positive]">$0.00</p>
+                        <p id="totalRevenue" class="text-3xl font-bold text-[--positive]">₹0.00</p>
                     </div>
                     <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="expensesCard">
                         <h3 class="text-lg font-semibold text-gray-500 mb-2">Expenses</h3>
-                        <p id="totalExpenses" class="text-3xl font-bold text-[--negative]">$0.00</p>
+                        <p id="totalExpenses" class="text-3xl font-bold text-[--negative]">₹0.00</p>
                     </div>
                     <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="profitCard">
                         <h3 class="text-lg font-semibold text-gray-500 mb-2">Profit / Loss</h3>
-                        <p id="profitOrLoss" class="text-3xl font-bold">$0.00</p>
+                        <p id="profitOrLoss" class="text-3xl font-bold">₹0.00</p>
                     </div>
                     <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="cashFlowCard">
                         <h3 class="text-lg font-semibold text-gray-500 mb-2">Cash Flow</h3>
-                        <p id="cashFlow" class="text-3xl font-bold">$0.00</p>
+                        <p id="cashFlow" class="text-3xl font-bold">₹0.00</p>
                     </div>
                 </div>
 
@@ -268,6 +268,7 @@
                         <button id="exportDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportData">Export Data (JSON)</button>
                         <button id="importDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors mt-2 md:mt-0" data-lang-key="importData">Import Data (JSON)</button>
                         <input type="file" id="importFile" class="hidden">
+                        <button id="deleteAllDataBtn" class="flex-1 bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition-colors mt-2 md:mt-0" data-lang-key="deleteAllData">Delete All Data</button>
                     </div>
                     
                     <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-700">
@@ -287,7 +288,9 @@
                 <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm text-center">
                     <h3 id="message-title" class="text-xl font-bold mb-4"></h3>
                     <p id="message-body" class="mb-6"></p>
-                    <button id="message-ok-btn" class="bg-[--primary] text-white px-6 py-2 rounded-lg font-semibold">OK</button>
+                    <div id="message-buttons" class="flex justify-center space-x-4">
+                        <button id="message-ok-btn" class="bg-[--primary] text-white px-6 py-2 rounded-lg font-semibold">OK</button>
+                    </div>
                 </div>
             </div>
             
@@ -348,6 +351,7 @@
                 settingsTitle: "Data & Tips",
                 exportData: "Export Data (JSON)",
                 importData: "Import Data (JSON)",
+                deleteAllData: "Delete All Data",
                 financialTips: "Financial Tips",
                 tip1: "Regularly review your cash flow to identify trends and potential issues.",
                 tip2: "Separate your business and personal finances to maintain clear records.",
@@ -357,7 +361,11 @@
                 tableAmount: "Amount",
                 tableActions: "Actions",
                 budgetAlertTitle: "Budget Alert!",
-                budgetAlertMsg: (category, amount) => `You have spent $${amount.toFixed(2)} on ${category}, which exceeds your budget.`,
+                budgetAlertMsg: (category, amount) => `You have spent ₹${amount.toFixed(2)} on ${category}, which exceeds your budget.`,
+                confirmDeletion: "Confirm Deletion",
+                deletionMessage: "Are you sure you want to delete all your data? This action cannot be undone.",
+                confirmButton: "Confirm",
+                cancelButton: "Cancel"
             },
             hi: {
                 appName: "बिजनेस बजट बडी",
@@ -399,6 +407,7 @@
                 settingsTitle: "डेटा और টিপস",
                 exportData: "डेटा निर्यात करें (JSON)",
                 importData: "डेटा आयात करें (JSON)",
+                deleteAllData: "सभी डेटा मिटाएं",
                 financialTips: "वित्तीय सलाह",
                 tip1: "प्रवृत्तियों और संभावित मुद्दों की पहचान करने के लिए नियमित रूप से अपने नकदी प्रवाह की समीक्षा करें।",
                 tip2: "स्पष्ट रिकॉर्ड बनाए रखने के लिए अपने व्यवसाय और व्यक्तिगत वित्त को अलग करें।",
@@ -408,7 +417,11 @@
                 tableAmount: "राशि",
                 tableActions: "क्रियाएँ",
                 budgetAlertTitle: "बजट अलर्ट!",
-                budgetAlertMsg: (category, amount) => `आपने ${category} पर $${amount.toFixed(2)} खर्च किए हैं, जो आपके बजट से अधिक है।`,
+                budgetAlertMsg: (category, amount) => `आपने ${category} पर ₹${amount.toFixed(2)} खर्च किए हैं, जो आपके बजट से अधिक है।`,
+                confirmDeletion: "हटाने की पुष्टि करें",
+                deletionMessage: "क्या आप वाकई अपना सारा डेटा हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती है।",
+                confirmButton: "पुष्टि करें",
+                cancelButton: "रद्द करें"
             },
             te: {
                 appName: "వ్యాపార బడ్జెట్ బడ్డీ",
@@ -450,6 +463,7 @@
                 settingsTitle: "డేటా మరియు చిట్కాలు",
                 exportData: "డేటా ఎగుమతి చేయండి (JSON)",
                 importData: "డేటా దిగుమతి చేయండి (JSON)",
+                deleteAllData: "అన్ని డేటాను తొలగించు",
                 financialTips: "ఆర్థిక చిట్కాలు",
                 tip1: "ధోరణులను మరియు సంభావ్య సమస్యలను గుర్తించడానికి మీ నగదు ప్రవాహాన్ని క్రమం తప్పకుండా సమీక్షించండి.",
                 tip2: "స్పష్టమైన రికార్డులను నిర్వహించడానికి మీ వ్యాపారం మరియు వ్యక్తిగత ఆర్థికాలను వేరు చేయండి.",
@@ -459,7 +473,11 @@
                 tableAmount: "మొత్తం",
                 tableActions: "చర్యలు",
                 budgetAlertTitle: "బడ్జెట్ హెచ్చరిక!",
-                budgetAlertMsg: (category, amount) => `${category}పై మీరు $${amount.toFixed(2)} ఖర్చు చేశారు, ఇది మీ బడ్జెట్‌ను మించిపోయింది.`,
+                budgetAlertMsg: (category, amount) => `${category}పై మీరు ₹${amount.toFixed(2)} ఖర్చు చేశారు, ఇది మీ బడ్జెట్‌ను మించిపోయింది.`,
+                confirmDeletion: "తొలగింపును నిర్ధారించండి",
+                deletionMessage: "మీరు మీ మొత్తం డేటాను తొలగించాలని అనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
+                confirmButton: "నిర్ధారించండి",
+                cancelButton: "రద్దు చేయి"
             },
             ta: {
                 appName: "வணிக பட்ஜெட் நண்பர்",
@@ -501,6 +519,7 @@
                 settingsTitle: "தரவு மற்றும் குறிப்புகள்",
                 exportData: "தரவை ஏற்றுமதி செய் (JSON)",
                 importData: "தரவை இறக்குமதி செய் (JSON)",
+                deleteAllData: "அனைத்து தரவையும் நீக்கு",
                 financialTips: "நிதி குறிப்புகள்",
                 tip1: "போக்குகளையும் சாத்தியமான சிக்கல்களையும் கண்டறிய உங்கள் பணப்புழக்கத்தை தொடர்ந்து மதிப்பாய்வு செய்யுங்கள்.",
                 tip2: "தெளிவான பதிவுகளைப் பராமரிக்க உங்கள் வணிக மற்றும் தனிப்பட்ட நிதிகளைப் பிரிக்கவும்.",
@@ -510,7 +529,11 @@
                 tableAmount: "தொகை",
                 tableActions: "நடவடிக்கைகள்",
                 budgetAlertTitle: "பட்ஜெட் எச்சரிக்கை!",
-                budgetAlertMsg: (category, amount) => `${category} மீது நீங்கள் $${amount.toFixed(2)} செலவழித்துள்ளீர்கள், இது உங்கள் பட்ஜெட்டை மீறுகிறது.`,
+                budgetAlertMsg: (category, amount) => `${category} மீது நீங்கள் ₹${amount.toFixed(2)} செலவழித்துள்ளீர்கள், இது உங்கள் பட்ஜெட்டை மீறுகிறது.`,
+                confirmDeletion: "நீக்குதலை உறுதிப்படுத்தவும்",
+                deletionMessage: "உங்கள் எல்லா தரவையும் நீக்க விரும்புகிறீர்களா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.",
+                confirmButton: "உறுதிப்படுத்து",
+                cancelButton: "ரத்து செய்"
             },
             bn: {
                 appName: "ব্যবসা বাজেট বন্ধু",
@@ -552,6 +575,7 @@
                 settingsTitle: "ডেটা এবং টিপস",
                 exportData: "ডেটা এক্সপোর্ট করুন (JSON)",
                 importData: "ডেটা ইম্পোর্ট করুন (JSON)",
+                deleteAllData: "সমস্ত ডেটা মুছুন",
                 financialTips: "আর্থিক টিপস",
                 tip1: "প্রবণতা এবং সম্ভাব্য সমস্যাগুলি সনাক্ত করতে নিয়মিত আপনার নগদ প্রবাহ পর্যালোচনা করুন।",
                 tip2: "পরিষ্কার রেকর্ড বজায় রাখার জন্য আপনার ব্যবসা এবং ব্যক্তিগত অর্থ আলাদা করুন।",
@@ -561,7 +585,11 @@
                 tableAmount: "পরিমাণ",
                 tableActions: "ক্রিয়াকলাপ",
                 budgetAlertTitle: "বাজেট সতর্কতা!",
-                budgetAlertMsg: (category, amount) => `${category} বাবদ আপনি $${amount.toFixed(2)} খরচ করেছেন, যা আপনার বাজেট অতিক্রম করেছে।`,
+                budgetAlertMsg: (category, amount) => `${category} বাবদ আপনি ₹${amount.toFixed(2)} খরচ করেছেন, যা আপনার বাজেট অতিক্রম করেছে।`,
+                confirmDeletion: "মুছে ফেলার নিশ্চিতকরণ",
+                deletionMessage: "আপনি কি সত্যিই আপনার সমস্ত ডেটা মুছে ফেলতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
+                confirmButton: "নিশ্চিত করুন",
+                cancelButton: "বাতিল করুন"
             },
         };
         
@@ -586,6 +614,7 @@
         const importDataBtn = document.getElementById('importDataBtn');
         const importFile = document.getElementById('importFile');
         const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
 
         let revenueExpensesChart = null;
         let expensePieChart = null;
@@ -602,7 +631,12 @@
             const messageTitle = document.getElementById('message-title');
             const messageBody = document.getElementById('message-body');
             const messageOkBtn = document.getElementById('message-ok-btn');
-        
+            const buttonContainer = document.getElementById('message-buttons');
+
+            // Reset buttons to default 'OK'
+            buttonContainer.innerHTML = '';
+            buttonContainer.appendChild(messageOkBtn);
+
             messageTitle.textContent = title;
             if (isHtml) {
                 messageBody.innerHTML = message;
@@ -614,6 +648,43 @@
             messageOkBtn.onclick = () => {
                 messageBox.classList.add('hidden');
             };
+        }
+
+        function showConfirmMessage(title, message, onConfirm) {
+            const messageBox = document.getElementById('message-box');
+            const messageTitle = document.getElementById('message-title');
+            const messageBody = document.getElementById('message-body');
+            const buttonContainer = document.getElementById('message-buttons');
+            
+            const currentLang = appData.settings.language;
+            const currentTranslations = translations[currentLang] || translations.en;
+            
+            // Clear and create new buttons for confirmation
+            buttonContainer.innerHTML = '';
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'bg-[--negative] text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600';
+            confirmBtn.textContent = currentTranslations.confirmButton;
+            confirmBtn.onclick = () => {
+                messageBox.classList.add('hidden');
+                if (onConfirm) {
+                    onConfirm();
+                }
+            };
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600';
+            cancelBtn.textContent = currentTranslations.cancelButton;
+            cancelBtn.onclick = () => {
+                messageBox.classList.add('hidden');
+            };
+
+            buttonContainer.appendChild(confirmBtn);
+            buttonContainer.appendChild(cancelBtn);
+
+            messageTitle.textContent = title;
+            messageBody.textContent = message;
+            messageBox.classList.remove('hidden');
         }
 
         // --- LOCAL STORAGE FUNCTIONS ---
@@ -634,7 +705,7 @@
             } catch (e) {
                 console.error("Failed to load data from LocalStorage:", e);
                 // Clear corrupted data if needed
-                // localStorage.removeItem('budgetBuddyData'); 
+                // localStorage.removeItem('budgetBuddyData');  
             }
         }
 
@@ -674,14 +745,17 @@
             const currentTranslations = translations[lang] || translations['en'];
             document.querySelectorAll('[data-lang-key]').forEach(el => {
                 const key = el.getAttribute('data-lang-key');
-                if (currentTranslations[key]) {
-                    if (el.tagName === 'INPUT' || el.tagName === 'BUTTON') {
-                        el.setAttribute('placeholder', currentTranslations[key]);
-                        el.setAttribute('value', currentTranslations[key]);
+                const translationValue = currentTranslations[key];
+
+                if (translationValue) {
+                    if (el.tagName === 'INPUT' && el.getAttribute('type') === 'text' || el.getAttribute('type') === 'number') {
+                         el.placeholder = translationValue;
+                    } else if (el.tagName === 'BUTTON') {
+                         el.textContent = translationValue;
                     } else if (el.tagName === 'OPTION') {
-                        el.textContent = currentTranslations[key];
+                         el.textContent = translationValue;
                     } else {
-                        el.textContent = currentTranslations[key];
+                         el.textContent = translationValue;
                     }
                 }
             });
@@ -702,7 +776,7 @@
                     <td class="py-2 px-4 whitespace-nowrap">${t.date}</td>
                     <td class="py-2 px-4 whitespace-nowrap">${t.description}</td>
                     <td class="py-2 px-4 whitespace-nowrap">${t.category}</td>
-                    <td class="py-2 px-4 whitespace-nowrap">$${t.amount.toFixed(2)}</td>
+                    <td class="py-2 px-4 whitespace-nowrap">₹${t.amount.toFixed(2)}</td>
                     <td class="py-2 px-4 text-right whitespace-nowrap">
                         <button onclick="deleteTransaction('${t.id}', '${type}')" class="text-red-500 hover:text-red-700 transition-colors">
                             <i class="fas fa-trash-alt"></i>
@@ -732,7 +806,7 @@
                 card.innerHTML = `
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-semibold capitalize">${currentTranslations[category] || category}</span>
-                        <span class="text-sm text-gray-500 dark:text-gray-400">$${totalSpent.toFixed(2)} / $${amount.toFixed(2)}</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">₹${totalSpent.toFixed(2)} / ₹${amount.toFixed(2)}</span>
                         <button onclick="deleteBudget('${category}')" class="text-gray-400 hover:text-red-500 transition-colors">
                             <i class="fas fa-times"></i>
                         </button>
@@ -751,15 +825,15 @@
             const profitLoss = totalRevenue - totalExpenses;
             const cashFlow = totalRevenue - totalExpenses;
             
-            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
-            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
             
             const profitLossEl = document.getElementById('profitOrLoss');
-            profitLossEl.textContent = `$${profitLoss.toFixed(2)}`;
+            profitLossEl.textContent = `₹${profitLoss.toFixed(2)}`;
             profitLossEl.className = profitLoss >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
 
             const cashFlowEl = document.getElementById('cashFlow');
-            cashFlowEl.textContent = `$${cashFlow.toFixed(2)}`;
+            cashFlowEl.textContent = `₹${cashFlow.toFixed(2)}`;
             cashFlowEl.className = cashFlow >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
         }
 
@@ -947,6 +1021,19 @@
             renderBudgets();
         }
 
+        function deleteAllData() {
+            const currentLang = appData.settings.language;
+            const currentTranslations = translations[currentLang] || translations.en;
+            showConfirmMessage(
+                currentTranslations.confirmDeletion,
+                currentTranslations.deletionMessage,
+                () => {
+                    localStorage.removeItem('budgetBuddyData');
+                    location.reload();
+                }
+            );
+        }
+
         // --- DATA IMPORT/EXPORT ---
         function exportData() {
             const dataStr = JSON.stringify(appData, null, 2);
@@ -1072,6 +1159,7 @@
         });
         
         exportCsvBtn.addEventListener('click', exportCsv);
+        deleteAllDataBtn.addEventListener('click', deleteAllData);
     </script>
 
 </body>
