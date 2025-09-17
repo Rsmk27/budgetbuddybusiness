@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="light-mode">
+<html lang="en" class="dark-mode">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,23 +7,23 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style type="text/tailwindcss">
-        /* Custom styles and colors for the app */
+        /* Custom styles and colors for the luxury dark theme */
         @layer base {
             :root {
-                --primary: #2563EB; /* Indigo */
-                --secondary: #A78BFA; /* Lavender (for secondary insights) */
-                --positive: #10B981; /* Emerald */
-                --negative: #DC2626; /* Crimson */
+                --primary: #FFD700; /* Gold */
+                --secondary: #A78BFA; /* Lavender */
+                --positive: #00FFC2; /* Fluorescent Teal */
+                --negative: #FF478F; /* Hot Pink */
                 --warning: #F59E0B; /* Golden Amber */
-                --bg-light: #F9FAFB; /* Off-White */
-                --bg-dark: #1f2937; /* gray-800 */
-                --text-light: #111827; /* Charcoal */
+                --bg-light: #FFFFFF;
+                --bg-dark: #1A1A2E; /* Deep Indigo */
+                --text-light: #2E2C4B; /* Dark Purple-Grey */
                 --text-secondary: #475569; /* Slate Gray */
-                --text-dark: #f9fafb; /* gray-50 */
-                --card-light: #E5E7EB; /* Light Gray */
-                --card-dark: #374151; /* gray-700 */
-                --border-light: #e5e7eb; /* gray-200 */
-                --border-dark: #4b5563; /* gray-600 */
+                --text-dark: #E4E4E4; /* Off-White */
+                --card-light: #F9FAFB;
+                --card-dark: #2E2C4B; /* Dark Purple */
+                --border-light: #E5E7EB;
+                --border-dark: #4b5563;
             }
             .light-mode {
                 --bg-color: var(--bg-light);
@@ -37,6 +37,26 @@
                 --card-color: var(--card-dark);
                 --border-color: var(--border-dark);
             }
+        }
+
+        /* Animations for page transitions */
+        .page {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animation for list item entry */
+        .list-item-enter {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -61,37 +81,37 @@
                 <nav>
                     <ul>
                         <li class="nav-item mb-2">
-                            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="dashboard">
+                            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="dashboard">
                                 <i class="fas fa-tachometer-alt"></i>
                                 <span data-lang-key="dashboard">Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#income" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="income">
+                            <a href="#income" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="income">
                                 <i class="fas fa-hand-holding-usd"></i>
                                 <span data-lang-key="income">Income</span>
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#expenses" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="expenses">
+                            <a href="#expenses" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="expenses">
                                 <i class="fas fa-money-bill-wave"></i>
                                 <span data-lang-key="expenses">Expenses</span>
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#reports" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="reports">
+                            <a href="#reports" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="reports">
                                 <i class="fas fa-chart-pie"></i>
                                 <span data-lang-key="reports">Reports</span>
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#budgets" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="budgets">
+                            <a href="#budgets" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="budgets">
                                 <i class="fas fa-piggy-bank"></i>
                                 <span data-lang-key="budgets">Budgets</span>
                             </a>
                         </li>
                         <li class="nav-item mb-2">
-                            <a href="#settings" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="settings">
+                            <a href="#settings" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="settings">
                                 <i class="fas fa-cog"></i>
                                 <span data-lang-key="settings">Settings</span>
                             </a>
@@ -102,14 +122,14 @@
             
             <!-- Dark Mode and Language Switcher -->
             <div class="mt-8">
-                <div class="flex items-center justify-between mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                <div class="flex items-center justify-between mb-4 p-2 rounded-lg bg-[--bg-dark]">
                     <span data-lang-key="darkMode">Dark Mode</span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" value="" class="sr-only peer" id="darkModeToggle">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[--primary]"></div>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[--primary] rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[--primary]"></div>
                     </label>
                 </div>
-                <div class="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                <div class="flex items-center justify-between p-2 rounded-lg bg-[--bg-dark]">
                     <span data-lang-key="language">Language</span>
                     <select id="language-switcher" class="bg-transparent text-sm rounded-lg border-none focus:ring-0 focus:outline-none">
                         <option value="en">English</option>
@@ -125,7 +145,7 @@
         <!-- Main Content Area -->
         <main class="flex-1 p-6 transition-transform duration-300">
             <!-- All page sections will be loaded here -->
-            <section id="dashboard" class="page active">
+            <section id="dashboard" class="page">
                 <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="dashboardTitle">Dashboard Overview</h2>
                 
                 <!-- Summary Cards -->
@@ -173,7 +193,7 @@
                             <option value="investments" data-lang-key="investments">Investments</option>
                             <option value="funding" data-lang-key="funding">Funding</option>
                         </select>
-                        <button type="submit" class="bg-[--positive] text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition-colors" data-lang-key="addIncome">Add Income</button>
+                        <button type="submit" class="bg-[--positive] text-white p-3 rounded-lg font-semibold hover:bg-[#00c28e] hover:scale-105 transition-transform" data-lang-key="addIncome">Add Income</button>
                     </form>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-[--card-color] rounded-lg">
@@ -207,7 +227,7 @@
                             <option value="materials" data-lang-key="materials">Raw Materials</option>
                             <option value="other" data-lang-key="other">Other</option>
                         </select>
-                        <button type="submit" class="bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition-colors" data-lang-key="addExpense">Add Expense</button>
+                        <button type="submit" class="bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-[#c2205d] hover:scale-105 transition-transform" data-lang-key="addExpense">Add Expense</button>
                     </form>
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-[--card-color] rounded-lg">
@@ -241,7 +261,7 @@
                 </div>
                 <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end space-x-4">
                     <button id="exportCsvBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
-                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="downloadPdf">Download Statement</button>
+                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#c9a700] hover:scale-105 transition-transform" data-lang-key="downloadPdf">Download Statement</button>
                 </div>
             </section>
             
@@ -258,7 +278,7 @@
                             <option value="other" data-lang-key="other">Other</option>
                         </select>
                         <input type="number" id="budgetAmount" placeholder="Budget Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <button type="submit" class="bg-[--primary] text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="setBudget">Set Budget</button>
+                        <button type="submit" class="bg-[--primary] text-white p-3 rounded-lg font-semibold hover:bg-[#c9a700] hover:scale-105 transition-transform" data-lang-key="setBudget">Set Budget</button>
                     </form>
                     <div id="budget-list" class="space-y-4">
                     </div>
@@ -275,7 +295,7 @@
                         <button id="deleteAllDataBtn" class="flex-1 bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition-colors mt-2 md:mt-0" data-lang-key="deleteAllData">Delete All Data</button>
                     </div>
                     
-                    <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-700">
+                    <div class="p-4 rounded-lg bg-[--bg-dark]">
                         <h3 class="text-lg font-semibold mb-2" data-lang-key="financialTips">Financial Tips</h3>
                         <p data-lang-key="tip1">
                             Regularly review your cash flow to identify trends and potential issues.
@@ -289,7 +309,7 @@
             
             <!-- Custom Message Box -->
             <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm text-center">
+                <div class="bg-[--card-color] p-8 rounded-lg shadow-2xl max-w-sm text-center">
                     <h3 id="message-title" class="text-xl font-bold mb-4"></h3>
                     <p id="message-body" class="mb-6"></p>
                     <div id="message-buttons" class="flex justify-center space-x-4">
@@ -312,7 +332,7 @@
             budgets: {},
             settings: {
                 language: 'en',
-                darkMode: false,
+                darkMode: true,
                 lastPage: 'dashboard'
             }
         };
@@ -416,7 +436,7 @@
                 downloadPdf: "स्टेटमेंट डाउनलोड करें",
                 budgetsTitle: "बजट लक्ष्य और সতর্কতা",
                 setBudget: "बजट सेट करें",
-                settingsTitle: "डेटा और টিপস",
+                settingsTitle: "डेटा और টিपস",
                 exportData: "डेटा निर्यात करें (JSON)",
                 importData: "डेटा आयात करें (JSON)",
                 deleteAllData: "सभी डेटा मिटाएं",
@@ -729,12 +749,21 @@
             try {
                 const savedData = localStorage.getItem('budgetBuddyData');
                 if (savedData) {
-                    appData = JSON.parse(savedData);
+                    const parsedData = JSON.parse(savedData);
+                    // Merge saved data with default to handle new fields
+                    appData = {
+                        ...appData,
+                        ...parsedData,
+                        settings: {
+                            ...appData.settings,
+                            ...parsedData.settings
+                        }
+                    };
                 }
             } catch (e) {
                 console.error("Failed to load data from LocalStorage:", e);
-                // Clear corrupted data if needed
-                // localStorage.removeItem('budgetBuddyData');  
+                // The data is corrupted, clear it.
+                localStorage.removeItem('budgetBuddyData');
             }
         }
 
@@ -752,9 +781,11 @@
 
             navItems.forEach(item => {
                 if (item.getAttribute('data-page') === pageId) {
-                    item.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                    item.classList.add('bg-[--card-color]');
+                    item.classList.remove('hover:bg-[--border-dark]');
                 } else {
-                    item.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                    item.classList.remove('bg-[--card-color]');
+                    item.classList.add('hover:bg-[--border-dark]');
                 }
             });
 
@@ -777,14 +808,14 @@
                 const translationValue = currentTranslations[key];
 
                 if (translationValue) {
-                    if (el.tagName === 'INPUT' && el.getAttribute('type') === 'text' || el.getAttribute('type') === 'number') {
-                         el.placeholder = translationValue;
+                    if (el.tagName === 'INPUT' && (el.getAttribute('type') === 'text' || el.getAttribute('type') === 'number')) {
+                            el.placeholder = translationValue;
                     } else if (el.tagName === 'BUTTON') {
-                         el.textContent = translationValue;
+                            el.textContent = translationValue;
                     } else if (el.tagName === 'OPTION') {
-                         el.textContent = translationValue;
+                            el.textContent = translationValue;
                     } else {
-                         el.textContent = translationValue;
+                            el.textContent = translationValue;
                     }
                 }
             });
@@ -800,14 +831,14 @@
             tableBody.innerHTML = ''; // Clear table
             transactions.forEach(t => {
                 const row = document.createElement('tr');
-                row.className = "hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors";
+                row.className = "hover:bg-[--border-dark] transition-colors list-item-enter";
                 row.innerHTML = `
                     <td class="py-2 px-4 whitespace-nowrap">${t.date}</td>
                     <td class="py-2 px-4 whitespace-nowrap">${t.description}</td>
                     <td class="py-2 px-4 whitespace-nowrap">${t.category}</td>
-                    <td class="py-2 px-4 whitespace-nowrap">₹${t.amount.toFixed(2)}</td>
+                    <td class="py-2 px-4 whitespace-nowrap text-[--${type === 'income' ? 'positive' : 'negative'}]">₹${t.amount.toFixed(2)}</td>
                     <td class="py-2 px-4 text-right whitespace-nowrap">
-                        <button onclick="deleteTransaction('${t.id}', '${type}')" class="text-red-500 hover:text-red-700 transition-colors">
+                        <button onclick="deleteTransaction('${t.id}', '${type}')" class="text-[--text-secondary] hover:text-[--negative] transition-colors">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
@@ -836,12 +867,12 @@
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-semibold capitalize">${currentTranslations[category] || category}</span>
                         <span class="text-sm text-[--text-secondary] ">₹${totalSpent.toFixed(2)} / ₹${amount.toFixed(2)}</span>
-                        <button onclick="deleteBudget('${category}')" class="text-gray-400 hover:text-red-500 transition-colors">
+                        <button onclick="deleteBudget('${category}')" class="text-gray-400 hover:text-[--negative] transition-colors">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                        <div class="h-2.5 rounded-full ${progressColor}" style="width: ${progress}%"></div>
+                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                        <div class="h-2.5 rounded-full ${progressColor} transition-all duration-500" style="width: ${progress}%"></div>
                     </div>
                 `;
                 budgetList.appendChild(card);
@@ -895,9 +926,17 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Revenue', data: revenueValues, borderColor: '#10B981', fill: false, tension: 0.1 },
-                        { label: 'Expenses', data: expenseValues, borderColor: '#DC2626', fill: false, tension: 0.1 }
+                        { label: 'Revenue', data: revenueValues, borderColor: 'var(--positive)', fill: false, tension: 0.1 },
+                        { label: 'Expenses', data: expenseValues, borderColor: 'var(--negative)', fill: false, tension: 0.1 }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
+                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
+                    }
                 }
             });
 
@@ -918,10 +957,17 @@
                     datasets: [{
                         data: pieData,
                         backgroundColor: [
-                            '#2563EB', '#DC2626', '#10B981', '#F59E0B', '#A78BFA', '#475569'
+                            '#FFD700', '#FF478F', '#00FFC2', '#A78BFA', '#2563EB', '#1A1A2E'
                         ],
                         hoverOffset: 4
                     }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-color)' } }
+                    }
                 }
             });
         }
@@ -961,9 +1007,20 @@
                 data: {
                     labels: monthlyLabels,
                     datasets: [
-                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'rgba(16, 185, 129, 0.6)' },
-                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: 'rgba(220, 38, 38, 0.6)' }
+                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'var(--positive)' },
+                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: 'var(--negative)' }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
+                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-color)' } }
+                    }
                 }
             });
 
@@ -990,9 +1047,20 @@
                 data: {
                     labels: quarterlyLabels,
                     datasets: [
-                        { label: 'Revenue', data: quarterlyRevenue, backgroundColor: 'rgba(16, 185, 129, 0.6)' },
-                        { label: 'Expenses', data: quarterlyExpenses, backgroundColor: 'rgba(220, 38, 38, 0.6)' }
+                        { label: 'Revenue', data: quarterlyRevenue, backgroundColor: 'var(--positive)' },
+                        { label: 'Expenses', data: quarterlyExpenses, backgroundColor: 'var(--negative)' }
                     ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
+                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-color)' } }
+                    }
                 }
             });
         }
@@ -1122,64 +1190,118 @@
         }
 
         // --- PDF EXPORT LOGIC ---
-        function exportToPdf() {
+        async function exportToPdf() {
             const currentLang = appData.settings.language;
             const currentTranslations = translations[currentLang] || translations.en;
             const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
             const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
             const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            // Generate report chart as an image
-            renderReportsCharts();
-            const monthlyChartImage = document.getElementById('monthlyReportChart').toDataURL('image/png');
+            // Create a temporary canvas and render the chart
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 600;
+            tempCanvas.height = 300;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            const monthlyData = {};
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const year = new Date().getFullYear();
+            for (let i = 0; i < 12; i++) {
+                monthlyData[months[i]] = { revenue: 0, expenses: 0 };
+            }
+            appData.income.forEach(t => {
+                const date = new Date(t.date);
+                if (date.getFullYear() === year) {
+                    monthlyData[months[date.getMonth()]].revenue += t.amount;
+                }
+            });
+            appData.expenses.forEach(t => {
+                const date = new Date(t.date);
+                if (date.getFullYear() === year) {
+                    monthlyData[months[date.getMonth()]].expenses += t.amount;
+                }
+            });
 
-            // Build the HTML content for the PDF
+            const monthlyLabels = Object.keys(monthlyData);
+            const monthlyRevenue = monthlyLabels.map(m => monthlyData[m].revenue);
+            const monthlyExpenses = monthlyLabels.map(m => monthlyData[m].expenses);
+            
+            new Chart(tempCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [
+                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: '#00FFC2' },
+                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: '#FF478F' }
+                    ]
+                }
+            });
+
+            // Wait for Chart.js to render
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const monthlyChartImage = tempCanvas.toDataURL('image/png');
+
+            // Build the HTML content for the PDF, including embedded styles for a luxury feel
             let pdfHtml = `
-                <div class="p-8 font-sans">
-                    <h1 class="text-3xl font-bold text-center mb-6" style="color: #2563EB;">${currentTranslations.statementTitle}</h1>
+                <style>
+                    body { font-family: 'Inter', sans-serif; }
+                    .pdf-container { background-color: #1A1A2E; color: #E4E4E4; padding: 2rem; }
+                    .pdf-card { background-color: #2E2C4B; border-radius: 10px; padding: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+                    .pdf-primary-text { color: #FFD700; }
+                    .pdf-positive-text { color: #00FFC2; }
+                    .pdf-negative-text { color: #FF478F; }
+                    .pdf-heading { font-size: 2rem; font-weight: bold; text-align: center; margin-bottom: 1.5rem; }
+                    .pdf-subheading { font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; }
+                    .pdf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+                    .pdf-table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
+                    .pdf-table th, .pdf-table td { padding: 0.5rem; border-bottom: 1px solid #4b5563; }
+                    .pdf-table th { background-color: #2E2C4B; color: #E4E4E4; text-transform: uppercase; }
+                </style>
+                <div class="pdf-container">
+                    <h1 class="pdf-heading pdf-primary-text">${currentTranslations.statementTitle}</h1>
                     
-                    <div class="mb-8">
-                        <h2 class="text-xl font-bold mb-2" style="color: #2563EB;">${currentTranslations.statementSummary}</h2>
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
-                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.revenueCard}</h3>
-                                <p class="text-2xl font-bold" style="color: #10B981;">₹${totalRevenue.toFixed(2)}</p>
+                    <div class="pdf-card">
+                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.statementSummary}</h2>
+                        <div class="pdf-grid">
+                            <div class="pdf-card text-center">
+                                <h3 class="font-semibold text-lg pdf-primary-text">${currentTranslations.revenueCard}</h3>
+                                <p class="text-2xl font-bold pdf-positive-text">₹${totalRevenue.toFixed(2)}</p>
                             </div>
-                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
-                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.expensesCard}</h3>
-                                <p class="text-2xl font-bold" style="color: #DC2626;">₹${totalExpenses.toFixed(2)}</p>
+                            <div class="pdf-card text-center">
+                                <h3 class="font-semibold text-lg pdf-primary-text">${currentTranslations.expensesCard}</h3>
+                                <p class="text-2xl font-bold pdf-negative-text">₹${totalExpenses.toFixed(2)}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-8">
-                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.monthlyReport}</h2>
+                    <div class="pdf-card">
+                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.monthlyReport}</h2>
                         <img src="${monthlyChartImage}" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
                     </div>
 
-                    <div>
-                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.statementTransactions}</h2>
-                        <table class="w-full text-left border-collapse" style="font-size: 14px;">
+                    <div class="pdf-card">
+                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.statementTransactions}</h2>
+                        <table class="pdf-table">
                             <thead>
-                                <tr style="background-color: #E5E7EB;">
-                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDate}</th>
-                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDescription}</th>
-                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableCategory}</th>
-                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableAmount}</th>
-                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">Type</th>
+                                <tr>
+                                    <th>${currentTranslations.tableDate}</th>
+                                    <th>${currentTranslations.tableDescription}</th>
+                                    <th>${currentTranslations.tableCategory}</th>
+                                    <th>${currentTranslations.tableAmount}</th>
+                                    <th>Type</th>
                                 </tr>
                             </thead>
                             <tbody>
             `;
             allTransactions.forEach(t => {
-                const amountColor = t.type === 'Income' ? '#10B981' : '#DC2626';
+                const amountColorClass = t.type === 'Income' ? 'pdf-positive-text' : 'pdf-negative-text';
                 pdfHtml += `
-                    <tr style="border-bottom: 1px solid #E5E7EB;">
-                        <td class="p-2">${t.date}</td>
-                        <td class="p-2">${t.description}</td>
-                        <td class="p-2">${t.category}</td>
-                        <td class="p-2" style="color: ${amountColor};">₹${t.amount.toFixed(2)}</td>
-                        <td class="p-2">${t.type}</td>
+                    <tr>
+                        <td>${t.date}</td>
+                        <td>${t.description}</td>
+                        <td>${t.category}</td>
+                        <td class="${amountColorClass}">₹${t.amount.toFixed(2)}</td>
+                        <td>${t.type}</td>
                     </tr>
                 `;
             });
@@ -1192,12 +1314,11 @@
             
             pdfContent.innerHTML = pdfHtml;
 
-            // Generate the PDF
             const options = {
-                margin: 1,
+                margin: 0.5,
                 filename: `financial_statement_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 2, logging: false, useCORS: true },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
