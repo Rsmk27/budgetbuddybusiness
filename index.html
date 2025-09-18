@@ -1,1400 +1,2557 @@
 <!DOCTYPE html>
-<html lang="en" class="dark-mode">
+
+<html lang="en" class="light-mode">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Budget Buddy</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style type="text/tailwindcss">
-        /* Custom styles and colors for the luxury dark theme */
-        @layer base {
-            :root {
-                --primary: #FFD700; /* Gold */
-                --secondary: #A78BFA; /* Lavender */
-                --positive: #00FFC2; /* Fluorescent Teal */
-                --negative: #FF478F; /* Hot Pink */
-                --warning: #F59E0B; /* Golden Amber */
-                --bg-light: #FFFFFF;
-                --bg-dark: #1A1A2E; /* Deep Indigo */
-                --text-light: #2E2C4B; /* Dark Purple-Grey */
-                --text-secondary: #475569; /* Slate Gray */
-                --text-dark: #E4E4E4; /* Off-White */
-                --card-light: #F9FAFB;
-                --card-dark: #2E2C4B; /* Dark Purple */
-                --border-light: #E5E7EB;
-                --border-dark: #4b5563;
-            }
-            .light-mode {
-                --bg-color: var(--bg-light);
-                --text-color: var(--text-light);
-                --card-color: var(--card-light);
-                --border-color: var(--border-light);
-            }
-            .dark-mode {
-                --bg-color: var(--bg-dark);
-                --text-color: var(--text-dark);
-                --card-color: var(--card-dark);
-                --border-color: var(--border-dark);
-            }
-        }
 
-        /* Animations for page transitions */
-        .page {
-            animation: fadeIn 0.5s ease-in-out forwards;
-        }
+    <meta charset="UTF-8">
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        /* Animation for list item entry */
-        .list-item-enter {
-            animation: slideIn 0.3s ease-out forwards;
-        }
+    <title>Business Budget Buddy</title>
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js and Datalabels Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- html2pdf.js for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Tailwind CSS CDN -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style type="text/tailwindcss">
+
+        /* Custom styles and colors for the app */
+
+        @layer base {
+
+            :root {
+
+                --primary: #2563EB; /* Indigo */
+
+                --secondary: #A78BFA; /* Lavender (for secondary insights) */
+
+                --positive: #10B981; /* Emerald */
+
+                --negative: #DC2626; /* Crimson */
+
+                --warning: #F59E0B; /* Golden Amber */
+
+                --bg-light: #F9FAFB; /* Off-White */
+
+                --bg-dark: #1f2937; /* gray-800 */
+
+                --text-light: #111827; /* Charcoal */
+
+                --text-secondary: #475569; /* Slate Gray */
+
+                --text-dark: #f9fafb; /* gray-50 */
+
+                --card-light: #E5E7EB; /* Light Gray */
+
+                --card-dark: #374151; /* gray-700 */
+
+                --border-light: #e5e7eb; /* gray-200 */
+
+                --border-dark: #4b5563; /* gray-600 */
+
+            }
+
+            .light-mode {
+
+                --bg-color: var(--bg-light);
+
+                --text-color: var(--text-light);
+
+                --card-color: var(--card-light);
+
+                --border-color: var(--border-light);
+
+            }
+
+            .dark-mode {
+
+                --bg-color: var(--bg-dark);
+
+                --text-color: var(--text-dark);
+
+                --card-color: var(--card-dark);
+
+                --border-color: var(--border-dark);
+
+            }
+
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js and Datalabels Plugin -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <!-- html2pdf.js for PDF export -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 </head>
+
 <body class="bg-[--bg-color] text-[--text-color] font-[Inter] transition-colors duration-300">
 
-    <!-- Main App Container -->
-    <div class="flex flex-col md:flex-row min-h-screen">
 
-        <!-- Sidebar Navigation -->
-        <aside class="bg-[--card-color] p-6 shadow-lg md:w-64 flex-shrink-0 flex flex-col justify-between">
-            <div>
-                <div class="text-xl font-bold text-[--primary] mb-8" data-lang-key="appName">Business Budget Buddy</div>
-                <nav>
-                    <ul>
-                        <li class="nav-item mb-2">
-                            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="dashboard">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span data-lang-key="dashboard">Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#income" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="income">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span data-lang-key="income">Income</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#expenses" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="expenses">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span data-lang-key="expenses">Expenses</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#reports" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="reports">
-                                <i class="fas fa-chart-pie"></i>
-                                <span data-lang-key="reports">Reports</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#budgets" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="budgets">
-                                <i class="fas fa-piggy-bank"></i>
-                                <span data-lang-key="budgets">Budgets</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#settings" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-[--border-dark] transition-colors cursor-pointer" data-page="settings">
-                                <i class="fas fa-cog"></i>
-                                <span data-lang-key="settings">Settings</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            
-            <!-- Dark Mode and Language Switcher -->
-            <div class="mt-8">
-                <div class="flex items-center justify-between mb-4 p-2 rounded-lg bg-[--bg-dark]">
-                    <span data-lang-key="darkMode">Dark Mode</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" value="" class="sr-only peer" id="darkModeToggle">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[--primary] rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[--primary]"></div>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between p-2 rounded-lg bg-[--bg-dark]">
-                    <span data-lang-key="language">Language</span>
-                    <select id="language-switcher" class="bg-transparent text-sm rounded-lg border-none focus:ring-0 focus:outline-none">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी</option>
-                        <option value="te">తెలుగు</option>
-                        <option value="ta">தமிழ்</option>
-                        <option value="bn">বাংলা</option>
-                    </select>
-                </div>
-            </div>
-        </aside>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 p-6 transition-transform duration-300">
-            <!-- All page sections will be loaded here -->
-            <section id="dashboard" class="page">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="dashboardTitle">Dashboard Overview</h2>
-                
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="revenueCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Revenue</h3>
-                        <p id="totalRevenue" class="text-3xl font-bold text-[--positive]">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="expensesCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Expenses</h3>
-                        <p id="totalExpenses" class="text-3xl font-bold text-[--negative]">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="profitCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Profit / Loss</h3>
-                        <p id="profitOrLoss" class="text-3xl font-bold">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="cashFlowCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Cash Flow</h3>
-                        <p id="cashFlow" class="text-3xl font-bold">₹0.00</p>
-                    </div>
-                </div>
+    <!-- Main App Container -->
 
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="revenueGrowthChart">Revenue & Expenses Growth</h3>
-                        <canvas id="revenueExpensesChart"></canvas>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="expenseBreakdownChart">Expense Breakdown by Category</h3>
-                        <canvas id="expensePieChart"></canvas>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="income" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="incomeTitle">Income Management</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="income-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="incomeDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <input type="number" id="incomeAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <select id="incomeCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="sales" data-lang-key="sales">Sales</option>
-                            <option value="services" data-lang-key="services">Services</option>
-                            <option value="investments" data-lang-key="investments">Investments</option>
-                            <option value="funding" data-lang-key="funding">Funding</option>
-                        </select>
-                        <button type="submit" class="bg-[--positive] text-white p-3 rounded-lg font-semibold hover:bg-[#00c28e] hover:scale-105 transition-transform" data-lang-key="addIncome">Add Income</button>
-                    </form>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-[--card-color] rounded-lg">
-                            <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
-                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
-                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
-                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
-                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="income-table-body" class="divide-y divide-[--border-color]">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="expenses" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="expensesTitle">Expense Tracking</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="expenseDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <input type="number" id="expenseAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <select id="expenseCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="operations" data-lang-key="operations">Operations</option>
-                            <option value="payroll" data-lang-key="payroll">Payroll</option>
-                            <option value="marketing" data-lang-key="marketing">Marketing</option>
-                            <option value="utilities" data-lang-key="utilities">Utilities</option>
-                            <option value="materials" data-lang-key="materials">Raw Materials</option>
-                            <option value="other" data-lang-key="other">Other</option>
-                        </select>
-                        <button type="submit" class="bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-[#c2205d] hover:scale-105 transition-transform" data-lang-key="addExpense">Add Expense</button>
-                    </form>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-[--card-color] rounded-lg">
-                            <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
-                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
-                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
-                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
-                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expense-table-body" class="divide-y divide-[--border-color]">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="reports" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="reportsTitle">Reports & Analytics</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="monthlyReport">Monthly Report</h3>
-                        <canvas id="monthlyReportChart"></canvas>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="quarterlyReport">Quarterly Report</h3>
-                        <canvas id="quarterlyReportChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end space-x-4">
-                    <button id="exportCsvBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
-                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-[#c9a700] hover:scale-105 transition-transform" data-lang-key="downloadPdf">Download Statement</button>
-                </div>
-            </section>
-            
-            <section id="budgets" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="budgetsTitle">Budget Goals & Alerts</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="budget-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <select id="budgetCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="operations" data-lang-key="operations">Operations</option>
-                            <option value="payroll" data-lang-key="payroll">Payroll</option>
-                            <option value="marketing" data-lang-key="marketing">Marketing</option>
-                            <option value="utilities" data-lang-key="utilities">Utilities</option>
-                            <option value="materials" data-lang-key="materials">Raw Materials</option>
-                            <option value="other" data-lang-key="other">Other</option>
-                        </select>
-                        <input type="number" id="budgetAmount" placeholder="Budget Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <button type="submit" class="bg-[--primary] text-white p-3 rounded-lg font-semibold hover:bg-[#c9a700] hover:scale-105 transition-transform" data-lang-key="setBudget">Set Budget</button>
-                    </form>
-                    <div id="budget-list" class="space-y-4">
-                    </div>
-                </div>
-            </section>
-            
-            <section id="settings" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="settingsTitle">Data & Tips</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md space-y-4">
-                    <div class="flex flex-col md:flex-row md:space-x-4">
-                        <button id="exportDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportData">Export Data (JSON)</button>
-                        <button id="importDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors mt-2 md:mt-0" data-lang-key="importData">Import Data (JSON)</button>
-                        <input type="file" id="importFile" class="hidden">
-                        <button id="deleteAllDataBtn" class="flex-1 bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition-colors mt-2 md:mt-0" data-lang-key="deleteAllData">Delete All Data</button>
-                    </div>
-                    
-                    <div class="p-4 rounded-lg bg-[--bg-dark]">
-                        <h3 class="text-lg font-semibold mb-2" data-lang-key="financialTips">Financial Tips</h3>
-                        <p data-lang-key="tip1">
-                            Regularly review your cash flow to identify trends and potential issues.
-                        </p>
-                        <p data-lang-key="tip2">
-                            Separate your business and personal finances to maintain clear records.
-                        </p>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- Custom Message Box -->
-            <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-[--card-color] p-8 rounded-lg shadow-2xl max-w-sm text-center">
-                    <h3 id="message-title" class="text-xl font-bold mb-4"></h3>
-                    <p id="message-body" class="mb-6"></p>
-                    <div id="message-buttons" class="flex justify-center space-x-4">
-                        <button id="message-ok-btn" class="bg-[--primary] text-white px-6 py-2 rounded-lg font-semibold">OK</button>
-                    </div>
-                </div>
-            </div>
+    <div class="flex flex-col md:flex-row min-h-screen">
 
-            <!-- PDF content container (hidden from view) -->
-            <div id="pdf-content" class="p-8 hidden"></div>
-            
-        </main>
-    </div>
 
-    <script>
-        // --- DATA AND STATE MANAGEMENT ---
-        let appData = {
-            expenses: [],
-            income: [],
-            budgets: {},
-            settings: {
-                language: 'en',
-                darkMode: true,
-                lastPage: 'dashboard'
-            }
-        };
 
-        const translations = {
-            en: {
-                appName: "Business Budget Buddy",
-                dashboard: "Dashboard",
-                income: "Income",
-                expenses: "Expenses",
-                reports: "Reports",
-                budgets: "Budgets",
-                settings: "Settings",
-                darkMode: "Dark Mode",
-                language: "Language",
-                dashboardTitle: "Dashboard Overview",
-                revenueCard: "Revenue",
-                expensesCard: "Expenses",
-                profitCard: "Profit / Loss",
-                cashFlowCard: "Cash Flow",
-                revenueGrowthChart: "Revenue & Expenses Growth",
-                expenseBreakdownChart: "Expense Breakdown by Category",
-                incomeTitle: "Income Management",
-                sales: "Sales",
-                services: "Services",
-                investments: "Investments",
-                funding: "Funding",
-                addIncome: "Add Income",
-                expensesTitle: "Expense Tracking",
-                operations: "Operations",
-                payroll: "Payroll",
-                marketing: "Marketing",
-                utilities: "Utilities",
-                materials: "Raw Materials",
-                other: "Other",
-                addExpense: "Add Expense",
-                reportsTitle: "Reports & Analytics",
-                monthlyReport: "Monthly Report",
-                quarterlyReport: "Quarterly Report",
-                exportCsv: "Export as CSV",
-                downloadPdf: "Download Statement",
-                budgetsTitle: "Budget Goals & Alerts",
-                setBudget: "Set Budget",
-                settingsTitle: "Data & Tips",
-                exportData: "Export Data (JSON)",
-                importData: "Import Data (JSON)",
-                deleteAllData: "Delete All Data",
-                financialTips: "Financial Tips",
-                tip1: "Regularly review your cash flow to identify trends and potential issues.",
-                tip2: "Separate your business and personal finances to maintain clear records.",
-                tableDate: "Date",
-                tableDescription: "Description",
-                tableCategory: "Category",
-                tableAmount: "Amount",
-                tableActions: "Actions",
-                budgetAlertTitle: "Budget Alert!",
-                budgetAlertMsg: (category, amount) => `You have spent ₹${amount.toFixed(2)} on ${category}, which exceeds your budget.`,
-                confirmDeletion: "Confirm Deletion",
-                deletionMessage: "Are you sure you want to delete all your data? This action cannot be undone.",
-                confirmButton: "Confirm",
-                cancelButton: "Cancel",
-                statementTitle: "Financial Statement",
-                statementSummary: "Summary",
-                statementTransactions: "All Transactions"
-            },
-            hi: {
-                appName: "बिजनेस बजट बडी",
-                dashboard: "डैशबोर्ड",
-                income: "आमदनी",
-                expenses: "खर्च",
-                reports: "रिपोर्ट",
-                budgets: "बजट",
-                settings: "सेटिंग्स",
-                darkMode: "डार्क मोड",
-                language: "भाषा",
-                dashboardTitle: "डैशबोर्ड अवलोकन",
-                revenueCard: "राजस्व",
-                expensesCard: "खर्च",
-                profitCard: "लाभ / हानि",
-                cashFlowCard: "नकद प्रवाह",
-                revenueGrowthChart: "राजस्व और खर्च वृद्धि",
-                expenseBreakdownChart: "श्रेणी के अनुसार खर्च का विवरण",
-                incomeTitle: "आय प्रबंधन",
-                sales: "बिक्री",
-                services: "सेवाएं",
-                investments: "निवेश",
-                funding: "फंडिंग",
-                addIncome: "आय जोड़ें",
-                expensesTitle: "खर्च ट्रैकिंग",
-                operations: "संचालन",
-                payroll: "वेतन",
-                marketing: "विपणन",
-                utilities: "उपयोगिताएँ",
-                materials: "कच्चा माल",
-                other: "अन्य",
-                addExpense: "खर्च जोड़ें",
-                reportsTitle: "रिपोर्ट और विश्लेषण",
-                monthlyReport: "मासिक रिपोर्ट",
-                quarterlyReport: "तिमाही रिपोर्ट",
-                exportCsv: "CSV के रूप में निर्यात करें",
-                downloadPdf: "स्टेटमेंट डाउनलोड करें",
-                budgetsTitle: "बजट लक्ष्य और সতর্কতা",
-                setBudget: "बजट सेट करें",
-                settingsTitle: "डेटा और টিपস",
-                exportData: "डेटा निर्यात करें (JSON)",
-                importData: "डेटा आयात करें (JSON)",
-                deleteAllData: "सभी डेटा मिटाएं",
-                financialTips: "वित्तीय सलाह",
-                tip1: "प्रवृत्तियों और संभावित मुद्दों की पहचान करने के लिए नियमित रूप से अपने नकदी प्रवाह की समीक्षा करें।",
-                tip2: "स्पष्ट रिकॉर्ड बनाए रखने के लिए अपने व्यवसाय और व्यक्तिगत वित्त को अलग करें।",
-                tableDate: "दिनांक",
-                tableDescription: "विवरण",
-                tableCategory: "श्रेणी",
-                tableAmount: "राशि",
-                tableActions: "क्रियाएँ",
-                budgetAlertTitle: "बजट अलर्ट!",
-                budgetAlertMsg: (category, amount) => `आपने ${category} पर ₹${amount.toFixed(2)} खर्च किए हैं, जो आपके बजट से अधिक है।`,
-                confirmDeletion: "हटाने की पुष्टि करें",
-                deletionMessage: "क्या आप वाकई अपना सारा डेटा हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती है।",
-                confirmButton: "पुष्टि करें",
-                cancelButton: "रद्द करें",
-                statementTitle: "वित्तीय विवरण",
-                statementSummary: "सारांश",
-                statementTransactions: "सभी लेनदेन"
-            },
-            te: {
-                appName: "వ్యాపార బడ్జెట్ బడ్డీ",
-                dashboard: "డాష్‌బోర్డ్",
-                income: "ఆదాయం",
-                expenses: "ఖర్చులు",
-                reports: "నివేదికలు",
-                budgets: "బడ్జెట్లు",
-                settings: "సెట్టింగులు",
-                darkMode: "డార్క్ మోడ్",
-                language: "భాష",
-                dashboardTitle: "డాష్‌బోర్డ్ అవలోకనం",
-                revenueCard: "ఆదాయం",
-                expensesCard: "ఖర్చులు",
-                profitCard: "లాభం / నష్టం",
-                cashFlowCard: "నగదు ప్రవాహం",
-                revenueGrowthChart: "ఆదాయం మరియు ఖర్చుల వృద్ధి",
-                expenseBreakdownChart: "కేటగిరీ వారీగా ఖర్చుల వివరాలు",
-                incomeTitle: "ఆదాయ నిర్వహణ",
-                sales: "అమ్మకాలు",
-                services: "సేవలు",
-                investments: "పెట్టుబడులు",
-                funding: "నిధులు",
-                addIncome: "ఆదాయం చేర్చు",
-                expensesTitle: "ఖర్చుల ట్రాకింగ్",
-                operations: "నిర్వహణ",
-                payroll: "జీతం",
-                marketing: "మార్కెటింగ్",
-                utilities: "ఉపయోగాలు",
-                materials: "ముడి పదార్థాలు",
-                other: "ఇతర",
-                addExpense: "ఖర్చు చేర్చు",
-                reportsTitle: "నివేదికలు మరియు విశ్లేషణలు",
-                monthlyReport: "నెలవారీ నివేదిక",
-                quarterlyReport: "త్రైమాసిక నివేదిక",
-                exportCsv: "CSVగా ఎగుమతి చేయి",
-                downloadPdf: "నివేదికను డౌన్‌లోడ్ చేయండి",
-                budgetsTitle: "బడ్జెట్ లక్ష్యాలు మరియు హెచ్చరికలు",
-                setBudget: "బడ్జెట్ సెట్ చేయండి",
-                settingsTitle: "డేటా మరియు చిట్కాలు",
-                exportData: "డేటా ఎగుమతి చేయండి (JSON)",
-                importData: "డేటా దిగుమతి చేయండి (JSON)",
-                deleteAllData: "అన్ని డేటాను తొలగించు",
-                financialTips: "ఆర్థిక చిట్కాలు",
-                tip1: "ధోరణులను మరియు సంభావ్య సమస్యలను గుర్తించడానికి మీ నగదు ప్రవాహాన్ని క్రమం తప్పకుండా సమీక్షించండి.",
-                tip2: "స్పష్టమైన రికార్డులను నిర్వహించడానికి మీ వ్యాపారం మరియు వ్యక్తిగత ఆర్థికాలను వేరు చేయండి.",
-                tableDate: "తేదీ",
-                tableDescription: "వివరణ",
-                tableCategory: "కేటగిరీ",
-                tableAmount: "మొత్తం",
-                tableActions: "చర్యలు",
-                budgetAlertTitle: "బడ్జెట్ హెచ్చరిక!",
-                budgetAlertMsg: (category, amount) => `${category}పై మీరు ₹${amount.toFixed(2)} ఖర్చు చేశారు, ఇది మీ బడ్జెట్‌ను మించిపోయింది.`,
-                confirmDeletion: "తొలగింపును నిర్ధారించండి",
-                deletionMessage: "మీరు మీ మొత్తం డేటాను తొలగించాలని అనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
-                confirmButton: "నిర్ధారించండి",
-                cancelButton: "రద్దు చేయి",
-                statementTitle: "ఆర్థిక నివేదిక",
-                statementSummary: "సారాంశం",
-                statementTransactions: "అన్ని లావాదేవీలు"
-            },
-            ta: {
-                appName: "வணிக பட்ஜெட் நண்பர்",
-                dashboard: "டாஷ்போர்டு",
-                income: "வருமானம்",
-                expenses: "செலவுகள்",
-                reports: "அறிக்கைகள்",
-                budgets: "பட்ஜெட்டுகள்",
-                settings: "அமைப்புகள்",
-                darkMode: "இருண்ட பயன்முறை",
-                language: "மொழி",
-                dashboardTitle: "டாஷ்போர்டு கண்ணோட்டம்",
-                revenueCard: "வருவாய்",
-                expensesCard: "செலவுகள்",
-                profitCard: "லாபம் / நஷ்டம்",
-                cashFlowCard: "பணப்புழக்கம்",
-                revenueGrowthChart: "வருவாய் மற்றும் செலவுகள் வளர்ச்சி",
-                expenseBreakdownChart: "பிரிவின்படி செலவுப் பகிர்வு",
-                incomeTitle: "வருமான மேலாண்மை",
-                sales: "விற்பனை",
-                services: "சேவைகள்",
-                investments: "முதலீடுகள்",
-                funding: "நிதி",
-                addIncome: "வருமானம் சேர்",
-                expensesTitle: "செலவு கண்காணிப்பு",
-                operations: "செயல்பாடுகள்",
-                payroll: "ஊதியம்",
-                marketing: "சந்தைப்படுத்துதல்",
-                utilities: "பயன்பாடுகள்",
-                materials: "கச்சா பொருட்கள்",
-                other: "மற்றவை",
-                addExpense: "செலவு சேர்",
-                reportsTitle: "அறிக்கைகள் மற்றும் பகுப்பாய்வு",
-                monthlyReport: "மாதாந்திர அறிக்கை",
-                quarterlyReport: "காலாண்டு அறிக்கை",
-                exportCsv: "CSV ஆக ஏற்றுமதி செய்",
-                downloadPdf: "அறிக்கையைப் பதிவிறக்கு",
-                budgetsTitle: "பட்ஜெட் இலக்குகள் மற்றும் எச்சரிக்கைகள்",
-                setBudget: "பட்ஜெட் அமை",
-                settingsTitle: "தரவு மற்றும் குறிப்புகள்",
-                exportData: "தரவை ஏற்றுமதி செய் (JSON)",
-                importData: "தரவை இறக்குமதி செய் (JSON)",
-                deleteAllData: "அனைத்து தரவையும் நீக்கு",
-                financialTips: "நிதி குறிப்புகள்",
-                tip1: "போக்குகளையும் சாத்தியமான சிக்கல்களையும் கண்டறிய உங்கள் பணப்புழக்கத்தை தொடர்ந்து மதிப்பாய்வு செய்யுங்கள்.",
-                tip2: "தெளிவான பதிவுகளைப் பராமரிக்க உங்கள் வணிக மற்றும் தனிப்பட்ட நிதிகளைப் பிரிக்கவும்.",
-                tableDate: "தேதி",
-                tableDescription: "விளக்கம்",
-                tableCategory: "பிரிவு",
-                tableAmount: "தொகை",
-                tableActions: "நடவடிக்கைகள்",
-                budgetAlertTitle: "பட்ஜெட் எச்சரிக்கை!",
-                budgetAlertMsg: (category, amount) => `${category} மீது நீங்கள் ₹${amount.toFixed(2)} செலவழித்துள்ளீர்கள், இது உங்கள் பட்ஜெட்டை மீறுகிறது.`,
-                confirmDeletion: "நீக்குதலை உறுதிப்படுத்தவும்",
-                deletionMessage: "உங்கள் எல்லா தரவையும் நீக்க விரும்புகிறீர்களா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.",
-                confirmButton: "உறுதிப்படுத்து",
-                cancelButton: "ரத்து செய்",
-                statementTitle: "நிதி அறிக்கை",
-                statementSummary: "சுருக்கம்",
-                statementTransactions: "அனைத்து பரிவர்த்தனைகள்"
-            },
-            bn: {
-                appName: "ব্যবসা বাজেট বন্ধু",
-                dashboard: "ড্যাশবোর্ড",
-                income: "আয়",
-                expenses: "খরচ",
-                reports: "রিপোর্ট",
-                budgets: "বাজেট",
-                settings: "সেটিংস",
-                darkMode: "ডার্ক মোড",
-                language: "ভাষা",
-                dashboardTitle: "ড্যাশবোর্ড ওভারভিউ",
-                revenueCard: "রাজস্ব",
-                expensesCard: "খরচ",
-                profitCard: "লাভ / ক্ষতি",
-                cashFlowCard: "নগদ প্রবাহ",
-                revenueGrowthChart: "রাজস্ব ও খরচের বৃদ্ধি",
-                expenseBreakdownChart: "ক্যাটাগরি অনুযায়ী খরচের বিবরণ",
-                incomeTitle: "আয় ব্যবস্থাপনা",
-                sales: "বিক্রয়",
-                services: "পরিষেবা",
-                investments: "বিনিয়োগ",
-                funding: "তহবিল",
-                addIncome: "আয় যোগ করুন",
-                expensesTitle: "খরচ ট্র্যাকিং",
-                operations: "পরিচালনা",
-                payroll: "বেতন",
-                marketing: "মার্কেটিং",
-                utilities: "ইউটিলিটি",
-                materials: "কাঁচামাল",
-                other: "অন্যান্য",
-                addExpense: "খরচ যোগ করুন",
-                reportsTitle: "রিপোর্ট এবং বিশ্লেষণ",
-                monthlyReport: "মাসিক রিপোর্ট",
-                quarterlyReport: "ত্রৈমাসিক রিপোর্ট",
-                exportCsv: "CSV হিসাবে এক্সপোর্ট করুন",
-                downloadPdf: "স্টেটমেন্ট ডাউনলোড করুন",
-                budgetsTitle: "বাজেট লক্ষ্য এবং সতর্কতা",
-                setBudget: "বাজেট সেট করুন",
-                settingsTitle: "ডেটা এবং টিপস",
-                exportData: "ডেটা এক্সপোর্ট করুন (JSON)",
-                importData: "ডেটা ইম্পোর্ট করুন (JSON)",
-                deleteAllData: "সমস্ত ডেটা মুছুন",
-                financialTips: "আর্থিক টিপস",
-                tip1: "প্রবণতা এবং সম্ভাব্য সমস্যাগুলি সনাক্ত করতে নিয়মিত আপনার নগদ প্রবাহ পর্যালোচনা করুন।",
-                tip2: "পরিষ্কার রেকর্ড বজায় রাখার জন্য আপনার ব্যবসা এবং ব্যক্তিগত অর্থ আলাদা করুন।",
-                tableDate: "তারিখ",
-                tableDescription: "বিবরণ",
-                tableCategory: "বিভাগ",
-                tableAmount: "পরিমাণ",
-                tableActions: "ক্রিয়াকলাপ",
-                budgetAlertTitle: "বাজেট সতর্কতা!",
-                budgetAlertMsg: (category, amount) => `${category} বাবদ আপনি ₹${amount.toFixed(2)} খরচ করেছেন, যা আপনার বাজেট অতিক্রম করেছে।`,
-                confirmDeletion: "মুছে ফেলার নিশ্চিতকরণ",
-                deletionMessage: "আপনি কি সত্যিই আপনার সমস্ত ডেটা মুছে ফেলতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
-                confirmButton: "নিশ্চিত করুন",
-                cancelButton: "বাতিল করুন",
-                statementTitle: "আর্থিক বিবৃতি",
-                statementSummary: "সারাংশ",
-                statementTransactions: "সমস্ত লেনদেন"
-            },
-        };
-        
-        // --- DOM ELEMENTS AND CONSTANTS ---
-        const navItems = document.querySelectorAll('.nav-item a');
-        const pages = document.querySelectorAll('.page');
-        const dashboardSection = document.getElementById('dashboard');
-        const incomeSection = document.getElementById('income');
-        const expensesSection = document.getElementById('expenses');
-        const reportsSection = document.getElementById('reports');
-        const budgetsSection = document.getElementById('budgets');
-        const settingsSection = document.getElementById('settings');
-        const incomeForm = document.getElementById('income-form');
-        const expenseForm = document.getElementById('expense-form');
-        const budgetForm = document.getElementById('budget-form');
-        const incomeTableBody = document.getElementById('income-table-body');
-        const expenseTableBody = document.getElementById('expense-table-body');
-        const budgetList = document.getElementById('budget-list');
-        const languageSwitcher = document.getElementById('language-switcher');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const exportDataBtn = document.getElementById('exportDataBtn');
-        const importDataBtn = document.getElementById('importDataBtn');
-        const importFile = document.getElementById('importFile');
-        const exportCsvBtn = document.getElementById('exportCsvBtn');
-        const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
-        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
-        const pdfContent = document.getElementById('pdf-content');
+        <!-- Sidebar Navigation -->
 
-        let revenueExpensesChart = null;
-        let expensePieChart = null;
-        let monthlyReportChart = null;
-        let quarterlyReportChart = null;
-        
-        // --- HELPER FUNCTIONS ---
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-        }
-        
-        function showMessage(title, message, isHtml = false) {
-            const messageBox = document.getElementById('message-box');
-            const messageTitle = document.getElementById('message-title');
-            const messageBody = document.getElementById('message-body');
-            const messageOkBtn = document.getElementById('message-ok-btn');
-            const buttonContainer = document.getElementById('message-buttons');
+        <aside class="bg-[--card-color] p-6 shadow-lg md:w-64 flex-shrink-0 flex flex-col justify-between">
 
-            // Reset buttons to default 'OK'
-            buttonContainer.innerHTML = '';
-            buttonContainer.appendChild(messageOkBtn);
+            <div>
 
-            messageTitle.textContent = title;
-            if (isHtml) {
-                messageBody.innerHTML = message;
-            } else {
-                messageBody.textContent = message;
-            }
-            messageBox.classList.remove('hidden');
-        
-            messageOkBtn.onclick = () => {
-                messageBox.classList.add('hidden');
-            };
-        }
+                <div class="text-xl font-bold text-[--primary] mb-8" data-lang-key="appName">Business Budget Buddy</div>
 
-        function showConfirmMessage(title, message, onConfirm) {
-            const messageBox = document.getElementById('message-box');
-            const messageTitle = document.getElementById('message-title');
-            const messageBody = document.getElementById('message-body');
-            const buttonContainer = document.getElementById('message-buttons');
-            
-            const currentLang = appData.settings.language;
-            const currentTranslations = translations[currentLang] || translations.en;
-            
-            // Clear and create new buttons for confirmation
-            buttonContainer.innerHTML = '';
+                <nav>
 
-            const confirmBtn = document.createElement('button');
-            confirmBtn.className = 'bg-[--negative] text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600';
-            confirmBtn.textContent = currentTranslations.confirmButton;
-            confirmBtn.onclick = () => {
-                messageBox.classList.add('hidden');
-                if (onConfirm) {
-                    onConfirm();
-                }
-            };
-            
-            const cancelBtn = document.createElement('button');
-            cancelBtn.className = 'bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600';
-            cancelBtn.textContent = currentTranslations.cancelButton;
-            cancelBtn.onclick = () => {
-                messageBox.classList.add('hidden');
-            };
+                    <ul>
 
-            buttonContainer.appendChild(confirmBtn);
-            buttonContainer.appendChild(cancelBtn);
+                        <li class="nav-item mb-2">
 
-            messageTitle.textContent = title;
-            messageBody.textContent = message;
-            messageBox.classList.remove('hidden');
-        }
+                            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="dashboard">
 
-        // --- LOCAL STORAGE FUNCTIONS ---
-        function saveData() {
-            try {
-                localStorage.setItem('budgetBuddyData', JSON.stringify(appData));
-            } catch (e) {
-                showMessage('Error', 'Could not save data to LocalStorage. It might be full.');
-            }
-        }
+                                <i class="fas fa-tachometer-alt"></i>
 
-        function loadData() {
-            try {
-                const savedData = localStorage.getItem('budgetBuddyData');
-                if (savedData) {
-                    const parsedData = JSON.parse(savedData);
-                    // Merge saved data with default to handle new fields
-                    appData = {
-                        ...appData,
-                        ...parsedData,
-                        settings: {
-                            ...appData.settings,
-                            ...parsedData.settings
-                        }
-                    };
-                }
-            } catch (e) {
-                console.error("Failed to load data from LocalStorage:", e);
-                // The data is corrupted, clear it.
-                localStorage.removeItem('budgetBuddyData');
-            }
-        }
+                                <span data-lang-key="dashboard">Dashboard</span>
 
-        // --- UI & RENDERING FUNCTIONS ---
-        function switchPage(pageId) {
-            pages.forEach(page => {
-                if (page.id === pageId) {
-                    page.classList.remove('hidden');
-                    page.classList.add('active-page');
-                } else {
-                    page.classList.add('hidden');
-                    page.classList.remove('active-page');
-                }
-            });
+                            </a>
 
-            navItems.forEach(item => {
-                if (item.getAttribute('data-page') === pageId) {
-                    item.classList.add('bg-[--card-color]');
-                    item.classList.remove('hover:bg-[--border-dark]');
-                } else {
-                    item.classList.remove('bg-[--card-color]');
-                    item.classList.add('hover:bg-[--border-dark]');
-                }
-            });
+                        </li>
 
-            // Update state and save
-            appData.settings.lastPage = pageId;
-            saveData();
+                        <li class="nav-item mb-2">
 
-            // Re-render the charts for the new page
-            if (pageId === 'dashboard') {
-                renderDashboardCharts();
-            } else if (pageId === 'reports') {
-                renderReportsCharts();
-            }
-        }
+                            <a href="#income" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="income">
 
-        function applyLanguage(lang) {
-            const currentTranslations = translations[lang] || translations['en'];
-            document.querySelectorAll('[data-lang-key]').forEach(el => {
-                const key = el.getAttribute('data-lang-key');
-                const translationValue = currentTranslations[key];
+                                <i class="fas fa-hand-holding-usd"></i>
 
-                if (translationValue) {
-                    if (el.tagName === 'INPUT' && (el.getAttribute('type') === 'text' || el.getAttribute('type') === 'number')) {
-                            el.placeholder = translationValue;
-                    } else if (el.tagName === 'BUTTON') {
-                            el.textContent = translationValue;
-                    } else if (el.tagName === 'OPTION') {
-                            el.textContent = translationValue;
-                    } else {
-                            el.textContent = translationValue;
-                    }
-                }
-            });
-            // Handle special cases like budget alert message
-            appData.settings.language = lang;
-            saveData();
-        }
+                                <span data-lang-key="income">Income</span>
 
-        function renderTransactions(type) {
-            const tableBody = type === 'income' ? incomeTableBody : expenseTableBody;
-            const transactions = appData[type];
-            
-            tableBody.innerHTML = ''; // Clear table
-            transactions.forEach(t => {
-                const row = document.createElement('tr');
-                row.className = "hover:bg-[--border-dark] transition-colors list-item-enter";
-                row.innerHTML = `
-                    <td class="py-2 px-4 whitespace-nowrap">${t.date}</td>
-                    <td class="py-2 px-4 whitespace-nowrap">${t.description}</td>
-                    <td class="py-2 px-4 whitespace-nowrap">${t.category}</td>
-                    <td class="py-2 px-4 whitespace-nowrap text-[--${type === 'income' ? 'positive' : 'negative'}]">₹${t.amount.toFixed(2)}</td>
-                    <td class="py-2 px-4 text-right whitespace-nowrap">
-                        <button onclick="deleteTransaction('${t.id}', '${type}')" class="text-[--text-secondary] hover:text-[--negative] transition-colors">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
+                            </a>
 
-        function renderBudgets() {
-            budgetList.innerHTML = '';
-            const currentLang = appData.settings.language;
-            const currentTranslations = translations[currentLang] || translations.en;
+                        </li>
 
-            for (const category in appData.budgets) {
-                const amount = appData.budgets[category];
-                const totalSpent = appData.expenses
-                    .filter(exp => exp.category === category)
-                    .reduce((sum, exp) => sum + exp.amount, 0);
+                        <li class="nav-item mb-2">
 
-                const progress = Math.min((totalSpent / amount) * 100, 100);
-                const progressColor = progress > 90 ? 'bg-[--negative]' : 'bg-[--positive]';
-                
-                const card = document.createElement('div');
-                card.className = "bg-[--card-color] p-4 rounded-lg shadow-sm";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-semibold capitalize">${currentTranslations[category] || category}</span>
-                        <span class="text-sm text-[--text-secondary] ">₹${totalSpent.toFixed(2)} / ₹${amount.toFixed(2)}</span>
-                        <button onclick="deleteBudget('${category}')" class="text-gray-400 hover:text-[--negative] transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="w-full bg-gray-700 rounded-full h-2.5">
-                        <div class="h-2.5 rounded-full ${progressColor} transition-all duration-500" style="width: ${progress}%"></div>
-                    </div>
-                `;
-                budgetList.appendChild(card);
-            }
-        }
+                            <a href="#expenses" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="expenses">
 
-        function updateDashboardMetrics() {
-            const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
-            const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
-            const profitLoss = totalRevenue - totalExpenses;
-            const cashFlow = totalRevenue - totalExpenses;
-            
-            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
-            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
-            
-            const profitLossEl = document.getElementById('profitOrLoss');
-            profitLossEl.textContent = `₹${profitLoss.toFixed(2)}`;
-            profitLossEl.className = profitLoss >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
+                                <i class="fas fa-money-bill-wave"></i>
 
-            const cashFlowEl = document.getElementById('cashFlow');
-            cashFlowEl.textContent = `₹${cashFlow.toFixed(2)}`;
-            cashFlowEl.className = cashFlow >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
-        }
+                                <span data-lang-key="expenses">Expenses</span>
 
-        function renderDashboardCharts() {
-            // Destroy existing charts to prevent stacking
-            if (revenueExpensesChart) revenueExpensesChart.destroy();
-            if (expensePieChart) expensePieChart.destroy();
+                            </a>
 
-            // Revenue and Expenses over time
-            const monthlyData = {};
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            appData.income.forEach(t => {
-                const month = new Date(t.date).getMonth();
-                if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
-                monthlyData[month].income += t.amount;
-            });
-            appData.expenses.forEach(t => {
-                const month = new Date(t.date).getMonth();
-                if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
-                monthlyData[month].expenses += t.amount;
-            });
+                        </li>
 
-            const labels = Object.keys(monthlyData).sort((a,b) => a - b).map(m => months[m]);
-            const revenueValues = Object.keys(monthlyData).sort((a,b) => a - b).map(m => monthlyData[m].income);
-            const expenseValues = Object.keys(monthlyData).sort((a,b) => a - b).map(m => monthlyData[m].expenses);
-            
-            const revenueExpensesCtx = document.getElementById('revenueExpensesChart').getContext('2d');
-            revenueExpensesChart = new Chart(revenueExpensesCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Revenue', data: revenueValues, borderColor: 'var(--positive)', fill: false, tension: 0.1 },
-                        { label: 'Expenses', data: expenseValues, borderColor: 'var(--negative)', fill: false, tension: 0.1 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
-                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
-                    }
-                }
-            });
+                        <li class="nav-item mb-2">
 
-            // Expense Breakdown Pie Chart
-            const expenseCategories = {};
-            appData.expenses.forEach(exp => {
-                expenseCategories[exp.category] = (expenseCategories[exp.category] || 0) + exp.amount;
-            });
+                            <a href="#reports" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="reports">
 
-            const pieData = Object.values(expenseCategories);
-            const pieLabels = Object.keys(expenseCategories).map(cat => translations[appData.settings.language][cat] || cat);
+                                <i class="fas fa-chart-pie"></i>
 
-            const pieCtx = document.getElementById('expensePieChart').getContext('2d');
-            expensePieChart = new Chart(pieCtx, {
-                type: 'pie',
-                data: {
-                    labels: pieLabels,
-                    datasets: [{
-                        data: pieData,
-                        backgroundColor: [
-                            '#FFD700', '#FF478F', '#00FFC2', '#A78BFA', '#2563EB', '#1A1A2E'
-                        ],
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: 'var(--text-color)' } }
-                    }
-                }
-            });
-        }
+                                <span data-lang-key="reports">Reports</span>
 
-        function renderReportsCharts() {
-            // Destroy existing charts
-            if (monthlyReportChart) monthlyReportChart.destroy();
-            if (quarterlyReportChart) quarterlyReportChart.destroy();
-            
-            // Monthly Report
-            const monthlyData = {};
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const year = new Date().getFullYear();
-            for (let i = 0; i < 12; i++) {
-                monthlyData[months[i]] = { revenue: 0, expenses: 0 };
-            }
-            appData.income.forEach(t => {
-                const date = new Date(t.date);
-                if (date.getFullYear() === year) {
-                    monthlyData[months[date.getMonth()]].revenue += t.amount;
-                }
-            });
-            appData.expenses.forEach(t => {
-                const date = new Date(t.date);
-                if (date.getFullYear() === year) {
-                    monthlyData[months[date.getMonth()]].expenses += t.amount;
-                }
-            });
+                            </a>
 
-            const monthlyLabels = Object.keys(monthlyData);
-            const monthlyRevenue = monthlyLabels.map(m => monthlyData[m].revenue);
-            const monthlyExpenses = monthlyLabels.map(m => monthlyData[m].expenses);
-            
-            const monthlyCtx = document.getElementById('monthlyReportChart').getContext('2d');
-            monthlyReportChart = new Chart(monthlyCtx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [
-                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'var(--positive)' },
-                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: 'var(--negative)' }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
-                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
-                    },
-                    plugins: {
-                        legend: { labels: { color: 'var(--text-color)' } }
-                    }
-                }
-            });
+                        </li>
 
-            // Quarterly Report
-            const quarterlyData = { 'Q1': { revenue: 0, expenses: 0 }, 'Q2': { revenue: 0, expenses: 0 }, 'Q3': { revenue: 0, expenses: 0 }, 'Q4': { revenue: 0, expenses: 0 }};
-            appData.income.forEach(t => {
-                const month = new Date(t.date).getMonth();
-                const quarter = `Q${Math.floor(month / 3) + 1}`;
-                quarterlyData[quarter].revenue += t.amount;
-            });
-            appData.expenses.forEach(t => {
-                const month = new Date(t.date).getMonth();
-                const quarter = `Q${Math.floor(month / 3) + 1}`;
-                quarterlyData[quarter].expenses += t.amount;
-            });
-            
-            const quarterlyLabels = Object.keys(quarterlyData);
-            const quarterlyRevenue = quarterlyLabels.map(q => quarterlyData[q].revenue);
-            const quarterlyExpenses = quarterlyLabels.map(q => quarterlyData[q].expenses);
+                        <li class="nav-item mb-2">
 
-            const quarterlyCtx = document.getElementById('quarterlyReportChart').getContext('2d');
-            quarterlyReportChart = new Chart(quarterlyCtx, {
-                type: 'bar',
-                data: {
-                    labels: quarterlyLabels,
-                    datasets: [
-                        { label: 'Revenue', data: quarterlyRevenue, backgroundColor: 'var(--positive)' },
-                        { label: 'Expenses', data: quarterlyExpenses, backgroundColor: 'var(--negative)' }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } },
-                        y: { ticks: { color: 'var(--text-color)' }, grid: { color: 'var(--border-color)' } }
-                    },
-                    plugins: {
-                        legend: { labels: { color: 'var(--text-color)' } }
-                    }
-                }
-            });
-        }
-        
-        // --- CRUD OPERATIONS ---
-        function addTransaction(type, description, amount, category) {
-            const transaction = {
-                id: generateId(),
-                date: new Date().toISOString().split('T')[0],
-                description: description,
-                amount: parseFloat(amount),
-                category: category
-            };
-            appData[type].push(transaction);
-            
-            // Check budget for expenses
-            if (type === 'expenses' && appData.budgets[category]) {
-                const totalSpent = appData.expenses
-                    .filter(exp => exp.category === category)
-                    .reduce((sum, exp) => sum + exp.amount, 0);
-                if (totalSpent > appData.budgets[category]) {
-                    const currentLang = appData.settings.language;
-                    const msg = translations[currentLang]?.budgetAlertMsg(translations[currentLang]?.[category] || category, totalSpent);
-                    showMessage(translations[currentLang]?.budgetAlertTitle, msg);
-                }
-            }
+                            <a href="#budgets" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="budgets">
 
-            saveData();
-            updateDashboardMetrics();
-            renderTransactions(type);
-            if (type === 'expenses') {
-                renderBudgets();
-            }
-        }
+                                <i class="fas fa-piggy-bank"></i>
 
-        function deleteTransaction(id, type) {
-            appData[type] = appData[type].filter(t => t.id !== id);
-            saveData();
-            updateDashboardMetrics();
-            renderTransactions(type);
-            if (type === 'expenses') {
-                renderBudgets();
-            }
-        }
-        
-        function addBudget(category, amount) {
-            appData.budgets[category] = parseFloat(amount);
-            saveData();
-            renderBudgets();
-        }
+                                <span data-lang-key="budgets">Budgets</span>
 
-        function deleteBudget(category) {
-            delete appData.budgets[category];
-            saveData();
-            renderBudgets();
-        }
+                            </a>
 
-        function deleteAllData() {
-            const currentLang = appData.settings.language;
-            const currentTranslations = translations[currentLang] || translations.en;
-            showConfirmMessage(
-                currentTranslations.confirmDeletion,
-                currentTranslations.deletionMessage,
-                () => {
-                    localStorage.removeItem('budgetBuddyData');
-                    location.reload();
-                }
-            );
-        }
+                        </li>
 
-        // --- DATA IMPORT/EXPORT ---
-        function exportData() {
-            const dataStr = JSON.stringify(appData, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'budget_buddy_data.json';
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        function importData(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    // Simple validation
-                    if (importedData.expenses && importedData.income) {
-                        appData = importedData;
-                        saveData();
-                        location.reload(); // Reload to apply changes
-                    } else {
-                        showMessage('Import Error', 'Invalid data format. Please select a valid Budget Buddy JSON file.');
-                    }
-                } catch (e) {
-                    showMessage('Import Error', 'Could not parse the JSON file.');
-                }
-            };
-            reader.readAsText(file);
-        }
-        
-        function exportCsv() {
-            const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))];
-            
-            if (allTransactions.length === 0) {
-                showMessage('Export Error', 'No data to export.');
-                return;
-            }
+                        <li class="nav-item mb-2">
 
-            const header = ["Date", "Description", "Category", "Amount", "Type"];
-            const csvRows = [header.join(',')];
-            
-            allTransactions.forEach(t => {
-                const row = [t.date, t.description, t.category, t.amount, t.type].map(item => `"${item}"`).join(',');
-                csvRows.push(row);
-            });
+                            <a href="#settings" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="settings">
 
-            const csvString = csvRows.join('\n');
-            const blob = new Blob([csvString], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'business_budget_report.csv';
-            link.click();
-            URL.revokeObjectURL(url);
-        }
+                                <i class="fas fa-cog"></i>
 
-        // --- PDF EXPORT LOGIC ---
-        async function exportToPdf() {
-            const currentLang = appData.settings.language;
-            const currentTranslations = translations[currentLang] || translations.en;
-            const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
-            const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
-            const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))].sort((a, b) => new Date(a.date) - new Date(b.date));
+                                <span data-lang-key="settings">Settings</span>
 
-            // Create a temporary canvas and render the chart
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = 600;
-            tempCanvas.height = 300;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            const monthlyData = {};
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const year = new Date().getFullYear();
-            for (let i = 0; i < 12; i++) {
-                monthlyData[months[i]] = { revenue: 0, expenses: 0 };
-            }
-            appData.income.forEach(t => {
-                const date = new Date(t.date);
-                if (date.getFullYear() === year) {
-                    monthlyData[months[date.getMonth()]].revenue += t.amount;
-                }
-            });
-            appData.expenses.forEach(t => {
-                const date = new Date(t.date);
-                if (date.getFullYear() === year) {
-                    monthlyData[months[date.getMonth()]].expenses += t.amount;
-                }
-            });
+                            </a>
 
-            const monthlyLabels = Object.keys(monthlyData);
-            const monthlyRevenue = monthlyLabels.map(m => monthlyData[m].revenue);
-            const monthlyExpenses = monthlyLabels.map(m => monthlyData[m].expenses);
-            
-            new Chart(tempCtx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [
-                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: '#00FFC2' },
-                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: '#FF478F' }
-                    ]
-                }
-            });
+                        </li>
 
-            // Wait for Chart.js to render
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const monthlyChartImage = tempCanvas.toDataURL('image/png');
+                    </ul>
 
-            // Build the HTML content for the PDF, including embedded styles for a luxury feel
-            let pdfHtml = `
-                <style>
-                    body { font-family: 'Inter', sans-serif; }
-                    .pdf-container { background-color: #1A1A2E; color: #E4E4E4; padding: 2rem; }
-                    .pdf-card { background-color: #2E2C4B; border-radius: 10px; padding: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1rem; }
-                    .pdf-primary-text { color: #FFD700; }
-                    .pdf-positive-text { color: #00FFC2; }
-                    .pdf-negative-text { color: #FF478F; }
-                    .pdf-heading { font-size: 2rem; font-weight: bold; text-align: center; margin-bottom: 1.5rem; }
-                    .pdf-subheading { font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; }
-                    .pdf-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-                    .pdf-table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 1rem; font-size: 0.875rem; }
-                    .pdf-table th, .pdf-table td { padding: 0.5rem; border-bottom: 1px solid #4b5563; }
-                    .pdf-table th { background-color: #2E2C4B; color: #E4E4E4; text-transform: uppercase; }
-                </style>
-                <div class="pdf-container">
-                    <h1 class="pdf-heading pdf-primary-text">${currentTranslations.statementTitle}</h1>
-                    
-                    <div class="pdf-card">
-                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.statementSummary}</h2>
-                        <div class="pdf-grid">
-                            <div class="pdf-card text-center">
-                                <h3 class="font-semibold text-lg pdf-primary-text">${currentTranslations.revenueCard}</h3>
-                                <p class="text-2xl font-bold pdf-positive-text">₹${totalRevenue.toFixed(2)}</p>
-                            </div>
-                            <div class="pdf-card text-center">
-                                <h3 class="font-semibold text-lg pdf-primary-text">${currentTranslations.expensesCard}</h3>
-                                <p class="text-2xl font-bold pdf-negative-text">₹${totalExpenses.toFixed(2)}</p>
-                            </div>
-                        </div>
-                    </div>
+                </nav>
 
-                    <div class="pdf-card">
-                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.monthlyReport}</h2>
-                        <img src="${monthlyChartImage}" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
-                    </div>
+            </div>
 
-                    <div class="pdf-card">
-                        <h2 class="pdf-subheading pdf-primary-text">${currentTranslations.statementTransactions}</h2>
-                        <table class="pdf-table">
-                            <thead>
-                                <tr>
-                                    <th>${currentTranslations.tableDate}</th>
-                                    <th>${currentTranslations.tableDescription}</th>
-                                    <th>${currentTranslations.tableCategory}</th>
-                                    <th>${currentTranslations.tableAmount}</th>
-                                    <th>Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-            allTransactions.forEach(t => {
-                const amountColorClass = t.type === 'Income' ? 'pdf-positive-text' : 'pdf-negative-text';
-                pdfHtml += `
-                    <tr>
-                        <td>${t.date}</td>
-                        <td>${t.description}</td>
-                        <td>${t.category}</td>
-                        <td class="${amountColorClass}">₹${t.amount.toFixed(2)}</td>
-                        <td>${t.type}</td>
-                    </tr>
-                `;
-            });
-            pdfHtml += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            pdfContent.innerHTML = pdfHtml;
+            
 
-            const options = {
-                margin: 0.5,
-                filename: `financial_statement_${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: false, useCORS: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
+            <!-- Dark Mode and Language Switcher -->
 
-            html2pdf().from(pdfContent).set(options).save();
-        }
+            <div class="mt-8">
 
-        // --- EVENT LISTENERS ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            applyLanguage(appData.settings.language);
-            languageSwitcher.value = appData.settings.language;
-            
-            document.body.classList.toggle('dark-mode', appData.settings.darkMode);
-            darkModeToggle.checked = appData.settings.darkMode;
+                <div class="flex items-center justify-between mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
 
-            renderTransactions('income');
-            renderTransactions('expenses');
-            renderBudgets();
-            updateDashboardMetrics();
-            
-            switchPage(appData.settings.lastPage);
-        });
+                    <span data-lang-key="darkMode">Dark Mode</span>
 
-        navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const pageId = item.getAttribute('data-page');
-                switchPage(pageId);
-            });
-        });
+                    <label class="relative inline-flex items-center cursor-pointer">
 
-        incomeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addTransaction('income', incomeForm.incomeDescription.value, incomeForm.incomeAmount.value, incomeForm.incomeCategory.value);
-            incomeForm.reset();
-        });
+                        <input type="checkbox" value="" class="sr-only peer" id="darkModeToggle">
 
-        expenseForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addTransaction('expenses', expenseForm.expenseDescription.value, expenseForm.expenseAmount.value, expenseForm.expenseCategory.value);
-            expenseForm.reset();
-        });
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[--primary]"></div>
 
-        budgetForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            addBudget(budgetForm.budgetCategory.value, budgetForm.budgetAmount.value);
-            budgetForm.reset();
-        });
+                    </label>
 
-        languageSwitcher.addEventListener('change', (e) => {
-            applyLanguage(e.target.value);
-        });
+                </div>
 
-        darkModeToggle.addEventListener('change', () => {
-            document.body.classList.toggle('dark-mode');
-            appData.settings.darkMode = darkModeToggle.checked;
-            saveData();
-        });
+                <div class="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
 
-        exportDataBtn.addEventListener('click', exportData);
-        
-        importDataBtn.addEventListener('click', () => {
-            importFile.click();
-        });
-        
-        importFile.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                importData(file);
-            }
-        });
-        
-        exportCsvBtn.addEventListener('click', exportCsv);
-        deleteAllDataBtn.addEventListener('click', deleteAllData);
-        downloadPdfBtn.addEventListener('click', exportToPdf);
-    </script>
+                    <span data-lang-key="language">Language</span>
+
+                    <select id="language-switcher" class="bg-transparent text-sm rounded-lg border-none focus:ring-0 focus:outline-none">
+
+                        <option value="en">English</option>
+
+                        <option value="hi">हिंदी</option>
+
+                        <option value="te">తెలుగు</option>
+
+                        <option value="ta">தமிழ்</option>
+
+                        <option value="bn">বাংলা</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+
+        <!-- Main Content Area -->
+
+        <main class="flex-1 p-6 transition-transform duration-300">
+
+            <!-- All page sections will be loaded here -->
+
+            <section id="dashboard" class="page active">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="dashboardTitle">Dashboard Overview</h2>
+
+                
+
+                <!-- Summary Cards -->
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="revenueCard">
+
+                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Revenue</h3>
+
+                        <p id="totalRevenue" class="text-3xl font-bold text-[--positive]">₹0.00</p>
+
+                    </div>
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="expensesCard">
+
+                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Expenses</h3>
+
+                        <p id="totalExpenses" class="text-3xl font-bold text-[--negative]">₹0.00</p>
+
+                    </div>
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="profitCard">
+
+                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Profit / Loss</h3>
+
+                        <p id="profitOrLoss" class="text-3xl font-bold">₹0.00</p>
+
+                    </div>
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="cashFlowCard">
+
+                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Cash Flow</h3>
+
+                        <p id="cashFlow" class="text-3xl font-bold">₹0.00</p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Charts -->
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                        <h3 class="text-lg font-semibold mb-4" data-lang-key="revenueGrowthChart">Revenue & Expenses Growth</h3>
+
+                        <canvas id="revenueExpensesChart"></canvas>
+
+                    </div>
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                        <h3 class="text-lg font-semibold mb-4" data-lang-key="expenseBreakdownChart">Expense Breakdown by Category</h3>
+
+                        <canvas id="expensePieChart"></canvas>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            
+
+            <section id="income" class="page hidden">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="incomeTitle">Income Management</h2>
+
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                    <form id="income-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+                        <input type="text" id="incomeDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                        <input type="number" id="incomeAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                        <select id="incomeCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                            <option value="sales" data-lang-key="sales">Sales</option>
+
+                            <option value="services" data-lang-key="services">Services</option>
+
+                            <option value="investments" data-lang-key="investments">Investments</option>
+
+                            <option value="funding" data-lang-key="funding">Funding</option>
+
+                        </select>
+
+                        <button type="submit" class="bg-[--positive] text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition-colors" data-lang-key="addIncome">Add Income</button>
+
+                    </form>
+
+                    <div class="overflow-x-auto">
+
+                        <table class="min-w-full bg-[--card-color] rounded-lg">
+
+                            <thead>
+
+                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+
+                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="income-table-body" class="divide-y divide-[--border-color]">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            
+
+            <section id="expenses" class="page hidden">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="expensesTitle">Expense Tracking</h2>
+
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                    <form id="expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+                        <input type="text" id="expenseDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                        <input type="number" id="expenseAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                        <select id="expenseCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                            <option value="operations" data-lang-key="operations">Operations</option>
+
+                            <option value="payroll" data-lang-key="payroll">Payroll</option>
+
+                            <option value="marketing" data-lang-key="marketing">Marketing</option>
+
+                            <option value="utilities" data-lang-key="utilities">Utilities</option>
+
+                            <option value="materials" data-lang-key="materials">Raw Materials</option>
+
+                            <option value="other" data-lang-key="other">Other</option>
+
+                        </select>
+
+                        <button type="submit" class="bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition-colors" data-lang-key="addExpense">Add Expense</button>
+
+                    </form>
+
+                    <div class="overflow-x-auto">
+
+                        <table class="min-w-full bg-[--card-color] rounded-lg">
+
+                            <thead>
+
+                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+
+                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
+
+                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="expense-table-body" class="divide-y divide-[--border-color]">
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            
+
+            <section id="reports" class="page hidden">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="reportsTitle">Reports & Analytics</h2>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                        <h3 class="text-lg font-semibold mb-4" data-lang-key="monthlyReport">Monthly Report</h3>
+
+                        <canvas id="monthlyReportChart"></canvas>
+
+                    </div>
+
+                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                        <h3 class="text-lg font-semibold mb-4" data-lang-key="quarterlyReport">Quarterly Report</h3>
+
+                        <canvas id="quarterlyReportChart"></canvas>
+
+                    </div>
+
+                </div>
+
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end space-x-4">
+
+                    <button id="exportCsvBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
+
+                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="downloadPdf">Download Statement</button>
+
+                </div>
+
+            </section>
+
+            
+
+            <section id="budgets" class="page hidden">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="budgetsTitle">Budget Goals & Alerts</h2>
+
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
+
+                    <form id="budget-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+                        <select id="budgetCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                            <option value="operations" data-lang-key="operations">Operations</option>
+
+                            <option value="payroll" data-lang-key="payroll">Payroll</option>
+
+                            <option value="marketing" data-lang-key="marketing">Marketing</option>
+
+                            <option value="utilities" data-lang-key="utilities">Utilities</option>
+
+                            <option value="materials" data-lang-key="materials">Raw Materials</option>
+
+                            <option value="other" data-lang-key="other">Other</option>
+
+                        </select>
+
+                        <input type="number" id="budgetAmount" placeholder="Budget Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
+
+                        <button type="submit" class="bg-[--primary] text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="setBudget">Set Budget</button>
+
+                    </form>
+
+                    <div id="budget-list" class="space-y-4">
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            
+
+            <section id="settings" class="page hidden">
+
+                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="settingsTitle">Data & Tips</h2>
+
+                <div class="bg-[--card-color] p-6 rounded-lg shadow-md space-y-4">
+
+                    <div class="flex flex-col md:flex-row md:space-x-4">
+
+                        <button id="exportDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportData">Export Data (JSON)</button>
+
+                        <button id="importDataBtn" class="flex-1 bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors mt-2 md:mt-0" data-lang-key="importData">Import Data (JSON)</button>
+
+                        <input type="file" id="importFile" class="hidden">
+
+                        <button id="deleteAllDataBtn" class="flex-1 bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-600 transition-colors mt-2 md:mt-0" data-lang-key="deleteAllData">Delete All Data</button>
+
+                    </div>
+
+                    
+
+                    <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-700">
+
+                        <h3 class="text-lg font-semibold mb-2" data-lang-key="financialTips">Financial Tips</h3>
+
+                        <p data-lang-key="tip1">
+
+                            Regularly review your cash flow to identify trends and potential issues.
+
+                        </p>
+
+                        <p data-lang-key="tip2">
+
+                            Separate your business and personal finances to maintain clear records.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            
+
+            <!-- Custom Message Box -->
+
+            <div id="message-box" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden z-50">
+
+                <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm text-center">
+
+                    <h3 id="message-title" class="text-xl font-bold mb-4"></h3>
+
+                    <p id="message-body" class="mb-6"></p>
+
+                    <div id="message-buttons" class="flex justify-center space-x-4">
+
+                        <button id="message-ok-btn" class="bg-[--primary] text-white px-6 py-2 rounded-lg font-semibold">OK</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PDF content container (hidden from view) -->
+
+            <div id="pdf-content" class="p-8 hidden"></div>
+
+            
+
+        </main>
+
+    </div>
+
+
+
+    <script>
+
+        // --- DATA AND STATE MANAGEMENT ---
+
+        let appData = {
+
+            expenses: [],
+
+            income: [],
+
+            budgets: {},
+
+            settings: {
+
+                language: 'en',
+
+                darkMode: false,
+
+                lastPage: 'dashboard'
+
+            }
+
+        };
+
+
+
+        const translations = {
+
+            en: {
+
+                appName: "Business Budget Buddy",
+
+                dashboard: "Dashboard",
+
+                income: "Income",
+
+                expenses: "Expenses",
+
+                reports: "Reports",
+
+                budgets: "Budgets",
+
+                settings: "Settings",
+
+                darkMode: "Dark Mode",
+
+                language: "Language",
+
+                dashboardTitle: "Dashboard Overview",
+
+                revenueCard: "Revenue",
+
+                expensesCard: "Expenses",
+
+                profitCard: "Profit / Loss",
+
+                cashFlowCard: "Cash Flow",
+
+                revenueGrowthChart: "Revenue & Expenses Growth",
+
+                expenseBreakdownChart: "Expense Breakdown by Category",
+
+                incomeTitle: "Income Management",
+
+                sales: "Sales",
+
+                services: "Services",
+
+                investments: "Investments",
+
+                funding: "Funding",
+
+                addIncome: "Add Income",
+
+                expensesTitle: "Expense Tracking",
+
+                operations: "Operations",
+
+                payroll: "Payroll",
+
+                marketing: "Marketing",
+
+                utilities: "Utilities",
+
+                materials: "Raw Materials",
+
+                other: "Other",
+
+                addExpense: "Add Expense",
+
+                reportsTitle: "Reports & Analytics",
+
+                monthlyReport: "Monthly Report",
+
+                quarterlyReport: "Quarterly Report",
+
+                exportCsv: "Export as CSV",
+
+                downloadPdf: "Download Statement",
+
+                budgetsTitle: "Budget Goals & Alerts",
+
+                setBudget: "Set Budget",
+
+                settingsTitle: "Data & Tips",
+
+                exportData: "Export Data (JSON)",
+
+                importData: "Import Data (JSON)",
+
+                deleteAllData: "Delete All Data",
+
+                financialTips: "Financial Tips",
+
+                tip1: "Regularly review your cash flow to identify trends and potential issues.",
+
+                tip2: "Separate your business and personal finances to maintain clear records.",
+
+                tableDate: "Date",
+
+                tableDescription: "Description",
+
+                tableCategory: "Category",
+
+                tableAmount: "Amount",
+
+                tableActions: "Actions",
+
+                budgetAlertTitle: "Budget Alert!",
+
+                budgetAlertMsg: (category, amount) => `You have spent ₹${amount.toFixed(2)} on ${category}, which exceeds your budget.`,
+
+                confirmDeletion: "Confirm Deletion",
+
+                deletionMessage: "Are you sure you want to delete all your data? This action cannot be undone.",
+
+                confirmButton: "Confirm",
+
+                cancelButton: "Cancel",
+
+                statementTitle: "Financial Statement",
+
+                statementSummary: "Summary",
+
+                statementTransactions: "All Transactions"
+
+            },
+
+            hi: {
+
+                appName: "बिजनेस बजट बडी",
+
+                dashboard: "डैशबोर्ड",
+
+                income: "आमदनी",
+
+                expenses: "खर्च",
+
+                reports: "रिपोर्ट",
+
+                budgets: "बजट",
+
+                settings: "सेटिंग्स",
+
+                darkMode: "डार्क मोड",
+
+                language: "भाषा",
+
+                dashboardTitle: "डैशबोर्ड अवलोकन",
+
+                revenueCard: "राजस्व",
+
+                expensesCard: "खर्च",
+
+                profitCard: "लाभ / हानि",
+
+                cashFlowCard: "नकद प्रवाह",
+
+                revenueGrowthChart: "राजस्व और खर्च वृद्धि",
+
+                expenseBreakdownChart: "श्रेणी के अनुसार खर्च का विवरण",
+
+                incomeTitle: "आय प्रबंधन",
+
+                sales: "बिक्री",
+
+                services: "सेवाएं",
+
+                investments: "निवेश",
+
+                funding: "फंडिंग",
+
+                addIncome: "आय जोड़ें",
+
+                expensesTitle: "खर्च ट्रैकिंग",
+
+                operations: "संचालन",
+
+                payroll: "वेतन",
+
+                marketing: "विपणन",
+
+                utilities: "उपयोगिताएँ",
+
+                materials: "कच्चा माल",
+
+                other: "अन्य",
+
+                addExpense: "खर्च जोड़ें",
+
+                reportsTitle: "रिपोर्ट और विश्लेषण",
+
+                monthlyReport: "मासिक रिपोर्ट",
+
+                quarterlyReport: "तिमाही रिपोर्ट",
+
+                exportCsv: "CSV के रूप में निर्यात करें",
+
+                downloadPdf: "स्टेटमेंट डाउनलोड करें",
+
+                budgetsTitle: "बजट लक्ष्य और সতর্কতা",
+
+                setBudget: "बजट सेट करें",
+
+                settingsTitle: "डेटा और টিপস",
+
+                exportData: "डेटा निर्यात करें (JSON)",
+
+                importData: "डेटा आयात करें (JSON)",
+
+                deleteAllData: "सभी डेटा मिटाएं",
+
+                financialTips: "वित्तीय सलाह",
+
+                tip1: "प्रवृत्तियों और संभावित मुद्दों की पहचान करने के लिए नियमित रूप से अपने नकदी प्रवाह की समीक्षा करें।",
+
+                tip2: "स्पष्ट रिकॉर्ड बनाए रखने के लिए अपने व्यवसाय और व्यक्तिगत वित्त को अलग करें।",
+
+                tableDate: "दिनांक",
+
+                tableDescription: "विवरण",
+
+                tableCategory: "श्रेणी",
+
+                tableAmount: "राशि",
+
+                tableActions: "क्रियाएँ",
+
+                budgetAlertTitle: "बजट अलर्ट!",
+
+                budgetAlertMsg: (category, amount) => `आपने ${category} पर ₹${amount.toFixed(2)} खर्च किए हैं, जो आपके बजट से अधिक है।`,
+
+                confirmDeletion: "हटाने की पुष्टि करें",
+
+                deletionMessage: "क्या आप वाकई अपना सारा डेटा हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती है।",
+
+                confirmButton: "पुष्टि करें",
+
+                cancelButton: "रद्द करें",
+
+                statementTitle: "वित्तीय विवरण",
+
+                statementSummary: "सारांश",
+
+                statementTransactions: "सभी लेनदेन"
+
+            },
+
+            te: {
+
+                appName: "వ్యాపార బడ్జెట్ బడ్డీ",
+
+                dashboard: "డాష్‌బోర్డ్",
+
+                income: "ఆదాయం",
+
+                expenses: "ఖర్చులు",
+
+                reports: "నివేదికలు",
+
+                budgets: "బడ్జెట్లు",
+
+                settings: "సెట్టింగులు",
+
+                darkMode: "డార్క్ మోడ్",
+
+                language: "భాష",
+
+                dashboardTitle: "డాష్‌బోర్డ్ అవలోకనం",
+
+                revenueCard: "ఆదాయం",
+
+                expensesCard: "ఖర్చులు",
+
+                profitCard: "లాభం / నష్టం",
+
+                cashFlowCard: "నగదు ప్రవాహం",
+
+                revenueGrowthChart: "ఆదాయం మరియు ఖర్చుల వృద్ధి",
+
+                expenseBreakdownChart: "కేటగిరీ వారీగా ఖర్చుల వివరాలు",
+
+                incomeTitle: "ఆదాయ నిర్వహణ",
+
+                sales: "అమ్మకాలు",
+
+                services: "సేవలు",
+
+                investments: "పెట్టుబడులు",
+
+                funding: "నిధులు",
+
+                addIncome: "ఆదాయం చేర్చు",
+
+                expensesTitle: "ఖర్చుల ట్రాకింగ్",
+
+                operations: "నిర్వహణ",
+
+                payroll: "జీతం",
+
+                marketing: "మార్కెటింగ్",
+
+                utilities: "ఉపయోగాలు",
+
+                materials: "ముడి పదార్థాలు",
+
+                other: "ఇతర",
+
+                addExpense: "ఖర్చు చేర్చు",
+
+                reportsTitle: "నివేదికలు మరియు విశ్లేషణలు",
+
+                monthlyReport: "నెలవారీ నివేదిక",
+
+                quarterlyReport: "త్రైమాసిక నివేదిక",
+
+                exportCsv: "CSVగా ఎగుమతి చేయి",
+
+                downloadPdf: "నివేదికను డౌన్‌లోడ్ చేయండి",
+
+                budgetsTitle: "బడ్జెట్ లక్ష్యాలు మరియు హెచ్చరికలు",
+
+                setBudget: "బడ్జెట్ సెట్ చేయండి",
+
+                settingsTitle: "డేటా మరియు చిట్కాలు",
+
+                exportData: "డేటా ఎగుమతి చేయండి (JSON)",
+
+                importData: "డేటా దిగుమతి చేయండి (JSON)",
+
+                deleteAllData: "అన్ని డేటాను తొలగించు",
+
+                financialTips: "ఆర్థిక చిట్కాలు",
+
+                tip1: "ధోరణులను మరియు సంభావ్య సమస్యలను గుర్తించడానికి మీ నగదు ప్రవాహాన్ని క్రమం తప్పకుండా సమీక్షించండి.",
+
+                tip2: "స్పష్టమైన రికార్డులను నిర్వహించడానికి మీ వ్యాపారం మరియు వ్యక్తిగత ఆర్థికాలను వేరు చేయండి.",
+
+                tableDate: "తేదీ",
+
+                tableDescription: "వివరణ",
+
+                tableCategory: "కేటగిరీ",
+
+                tableAmount: "మొత్తం",
+
+                tableActions: "చర్యలు",
+
+                budgetAlertTitle: "బడ్జెట్ హెచ్చరిక!",
+
+                budgetAlertMsg: (category, amount) => `${category}పై మీరు ₹${amount.toFixed(2)} ఖర్చు చేశారు, ఇది మీ బడ్జెట్‌ను మించిపోయింది.`,
+
+                confirmDeletion: "తొలగింపును నిర్ధారించండి",
+
+                deletionMessage: "మీరు మీ మొత్తం డేటాను తొలగించాలని అనుకుంటున్నారా? ఈ చర్యను రద్దు చేయలేరు.",
+
+                confirmButton: "నిర్ధారించండి",
+
+                cancelButton: "రద్దు చేయి",
+
+                statementTitle: "ఆర్థిక నివేదిక",
+
+                statementSummary: "సారాంశం",
+
+                statementTransactions: "అన్ని లావాదేవీలు"
+
+            },
+
+            ta: {
+
+                appName: "வணிக பட்ஜெட் நண்பர்",
+
+                dashboard: "டாஷ்போர்டு",
+
+                income: "வருமானம்",
+
+                expenses: "செலவுகள்",
+
+                reports: "அறிக்கைகள்",
+
+                budgets: "பட்ஜெட்டுகள்",
+
+                settings: "அமைப்புகள்",
+
+                darkMode: "இருண்ட பயன்முறை",
+
+                language: "மொழி",
+
+                dashboardTitle: "டாஷ்போர்டு கண்ணோட்டம்",
+
+                revenueCard: "வருவாய்",
+
+                expensesCard: "செலவுகள்",
+
+                profitCard: "லாபம் / நஷ்டம்",
+
+                cashFlowCard: "பணப்புழக்கம்",
+
+                revenueGrowthChart: "வருவாய் மற்றும் செலவுகள் வளர்ச்சி",
+
+                expenseBreakdownChart: "பிரிவின்படி செலவுப் பகிர்வு",
+
+                incomeTitle: "வருமான மேலாண்மை",
+
+                sales: "விற்பனை",
+
+                services: "சேவைகள்",
+
+                investments: "முதலீடுகள்",
+
+                funding: "நிதி",
+
+                addIncome: "வருமானம் சேர்",
+
+                expensesTitle: "செலவு கண்காணிப்பு",
+
+                operations: "செயல்பாடுகள்",
+
+                payroll: "ஊதியம்",
+
+                marketing: "சந்தைப்படுத்துதல்",
+
+                utilities: "பயன்பாடுகள்",
+
+                materials: "கச்சா பொருட்கள்",
+
+                other: "மற்றவை",
+
+                addExpense: "செலவு சேர்",
+
+                reportsTitle: "அறிக்கைகள் மற்றும் பகுப்பாய்வு",
+
+                monthlyReport: "மாதாந்திர அறிக்கை",
+
+                quarterlyReport: "காலாண்டு அறிக்கை",
+
+                exportCsv: "CSV ஆக ஏற்றுமதி செய்",
+
+                downloadPdf: "அறிக்கையைப் பதிவிறக்கு",
+
+                budgetsTitle: "பட்ஜெட் இலக்குகள் மற்றும் எச்சரிக்கைகள்",
+
+                setBudget: "பட்ஜெட் அமை",
+
+                settingsTitle: "தரவு மற்றும் குறிப்புகள்",
+
+                exportData: "தரவை ஏற்றுமதி செய் (JSON)",
+
+                importData: "தரவை இறக்குமதி செய் (JSON)",
+
+                deleteAllData: "அனைத்து தரவையும் நீக்கு",
+
+                financialTips: "நிதி குறிப்புகள்",
+
+                tip1: "போக்குகளையும் சாத்தியமான சிக்கல்களையும் கண்டறிய உங்கள் பணப்புழக்கத்தை தொடர்ந்து மதிப்பாய்வு செய்யுங்கள்.",
+
+                tip2: "தெளிவான பதிவுகளைப் பராமரிக்க உங்கள் வணிக மற்றும் தனிப்பட்ட நிதிகளைப் பிரிக்கவும்.",
+
+                tableDate: "தேதி",
+
+                tableDescription: "விளக்கம்",
+
+                tableCategory: "பிரிவு",
+
+                tableAmount: "தொகை",
+
+                tableActions: "நடவடிக்கைகள்",
+
+                budgetAlertTitle: "பட்ஜெட் எச்சரிக்கை!",
+
+                budgetAlertMsg: (category, amount) => `${category} மீது நீங்கள் ₹${amount.toFixed(2)} செலவழித்துள்ளீர்கள், இது உங்கள் பட்ஜெட்டை மீறுகிறது.`,
+
+                confirmDeletion: "நீக்குதலை உறுதிப்படுத்தவும்",
+
+                deletionMessage: "உங்கள் எல்லா தரவையும் நீக்க விரும்புகிறீர்களா? இந்தச் செயலைத் திரும்பப் பெற முடியாது.",
+
+                confirmButton: "உறுதிப்படுத்து",
+
+                cancelButton: "ரத்து செய்",
+
+                statementTitle: "நிதி அறிக்கை",
+
+                statementSummary: "சுருக்கம்",
+
+                statementTransactions: "அனைத்து பரிவர்த்தனைகள்"
+
+            },
+
+            bn: {
+
+                appName: "ব্যবসা বাজেট বন্ধু",
+
+                dashboard: "ড্যাশবোর্ড",
+
+                income: "আয়",
+
+                expenses: "খরচ",
+
+                reports: "রিপোর্ট",
+
+                budgets: "বাজেট",
+
+                settings: "সেটিংস",
+
+                darkMode: "ডার্ক মোড",
+
+                language: "ভাষা",
+
+                dashboardTitle: "ড্যাশবোর্ড ওভারভিউ",
+
+                revenueCard: "রাজস্ব",
+
+                expensesCard: "খরচ",
+
+                profitCard: "লাভ / ক্ষতি",
+
+                cashFlowCard: "নগদ প্রবাহ",
+
+                revenueGrowthChart: "রাজস্ব ও খরচের বৃদ্ধি",
+
+                expenseBreakdownChart: "ক্যাটাগরি অনুযায়ী খরচের বিবরণ",
+
+                incomeTitle: "আয় ব্যবস্থাপনা",
+
+                sales: "বিক্রয়",
+
+                services: "পরিষেবা",
+
+                investments: "বিনিয়োগ",
+
+                funding: "তহবিল",
+
+                addIncome: "আয় যোগ করুন",
+
+                expensesTitle: "খরচ ট্র্যাকিং",
+
+                operations: "পরিচালনা",
+
+                payroll: "বেতন",
+
+                marketing: "মার্কেটিং",
+
+                utilities: "ইউটিলিটি",
+
+                materials: "কাঁচামাল",
+
+                other: "অন্যান্য",
+
+                addExpense: "খরচ যোগ করুন",
+
+                reportsTitle: "রিপোর্ট এবং বিশ্লেষণ",
+
+                monthlyReport: "মাসিক রিপোর্ট",
+
+                quarterlyReport: "ত্রৈমাসিক রিপোর্ট",
+
+                exportCsv: "CSV হিসাবে এক্সপোর্ট করুন",
+
+                downloadPdf: "স্টেটমেন্ট ডাউনলোড করুন",
+
+                budgetsTitle: "বাজেট লক্ষ্য এবং সতর্কতা",
+
+                setBudget: "বাজেট সেট করুন",
+
+                settingsTitle: "ডেটা এবং টিপস",
+
+                exportData: "ডেটা এক্সপোর্ট করুন (JSON)",
+
+                importData: "ডেটা ইম্পোর্ট করুন (JSON)",
+
+                deleteAllData: "সমস্ত ডেটা মুছুন",
+
+                financialTips: "আর্থিক টিপস",
+
+                tip1: "প্রবণতা এবং সম্ভাব্য সমস্যাগুলি সনাক্ত করতে নিয়মিত আপনার নগদ প্রবাহ পর্যালোচনা করুন।",
+
+                tip2: "পরিষ্কার রেকর্ড বজায় রাখার জন্য আপনার ব্যবসা এবং ব্যক্তিগত অর্থ আলাদা করুন।",
+
+                tableDate: "তারিখ",
+
+                tableDescription: "বিবরণ",
+
+                tableCategory: "বিভাগ",
+
+                tableAmount: "পরিমাণ",
+
+                tableActions: "ক্রিয়াকলাপ",
+
+                budgetAlertTitle: "বাজেট সতর্কতা!",
+
+                budgetAlertMsg: (category, amount) => `${category} বাবদ আপনি ₹${amount.toFixed(2)} খরচ করেছেন, যা আপনার বাজেট অতিক্রম করেছে।`,
+
+                confirmDeletion: "মুছে ফেলার নিশ্চিতকরণ",
+
+                deletionMessage: "আপনি কি সত্যিই আপনার সমস্ত ডেটা মুছে ফেলতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
+
+                confirmButton: "নিশ্চিত করুন",
+
+                cancelButton: "বাতিল করুন",
+
+                statementTitle: "আর্থিক বিবৃতি",
+
+                statementSummary: "সারাংশ",
+
+                statementTransactions: "সমস্ত লেনদেন"
+
+            },
+
+        };
+
+        
+
+        // --- DOM ELEMENTS AND CONSTANTS ---
+
+        const navItems = document.querySelectorAll('.nav-item a');
+
+        const pages = document.querySelectorAll('.page');
+
+        const dashboardSection = document.getElementById('dashboard');
+
+        const incomeSection = document.getElementById('income');
+
+        const expensesSection = document.getElementById('expenses');
+
+        const reportsSection = document.getElementById('reports');
+
+        const budgetsSection = document.getElementById('budgets');
+
+        const settingsSection = document.getElementById('settings');
+
+        const incomeForm = document.getElementById('income-form');
+
+        const expenseForm = document.getElementById('expense-form');
+
+        const budgetForm = document.getElementById('budget-form');
+
+        const incomeTableBody = document.getElementById('income-table-body');
+
+        const expenseTableBody = document.getElementById('expense-table-body');
+
+        const budgetList = document.getElementById('budget-list');
+
+        const languageSwitcher = document.getElementById('language-switcher');
+
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        const exportDataBtn = document.getElementById('exportDataBtn');
+
+        const importDataBtn = document.getElementById('importDataBtn');
+
+        const importFile = document.getElementById('importFile');
+
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+        const deleteAllDataBtn = document.getElementById('deleteAllDataBtn');
+
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+        const pdfContent = document.getElementById('pdf-content');
+
+
+
+        let revenueExpensesChart = null;
+
+        let expensePieChart = null;
+
+        let monthlyReportChart = null;
+
+        let quarterlyReportChart = null;
+
+        
+
+        // --- HELPER FUNCTIONS ---
+
+        function generateId() {
+
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+
+        }
+
+        
+
+        function showMessage(title, message, isHtml = false) {
+
+            const messageBox = document.getElementById('message-box');
+
+            const messageTitle = document.getElementById('message-title');
+
+            const messageBody = document.getElementById('message-body');
+
+            const messageOkBtn = document.getElementById('message-ok-btn');
+
+            const buttonContainer = document.getElementById('message-buttons');
+
+
+
+            // Reset buttons to default 'OK'
+
+            buttonContainer.innerHTML = '';
+
+            buttonContainer.appendChild(messageOkBtn);
+
+
+
+            messageTitle.textContent = title;
+
+            if (isHtml) {
+
+                messageBody.innerHTML = message;
+
+            } else {
+
+                messageBody.textContent = message;
+
+            }
+
+            messageBox.classList.remove('hidden');
+
+        
+
+            messageOkBtn.onclick = () => {
+
+                messageBox.classList.add('hidden');
+
+            };
+
+        }
+
+
+
+        function showConfirmMessage(title, message, onConfirm) {
+
+            const messageBox = document.getElementById('message-box');
+
+            const messageTitle = document.getElementById('message-title');
+
+            const messageBody = document.getElementById('message-body');
+
+            const buttonContainer = document.getElementById('message-buttons');
+
+            
+
+            const currentLang = appData.settings.language;
+
+            const currentTranslations = translations[currentLang] || translations.en;
+
+            
+
+            // Clear and create new buttons for confirmation
+
+            buttonContainer.innerHTML = '';
+
+
+
+            const confirmBtn = document.createElement('button');
+
+            confirmBtn.className = 'bg-[--negative] text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600';
+
+            confirmBtn.textContent = currentTranslations.confirmButton;
+
+            confirmBtn.onclick = () => {
+
+                messageBox.classList.add('hidden');
+
+                if (onConfirm) {
+
+                    onConfirm();
+
+                }
+
+            };
+
+            
+
+            const cancelBtn = document.createElement('button');
+
+            cancelBtn.className = 'bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600';
+
+            cancelBtn.textContent = currentTranslations.cancelButton;
+
+            cancelBtn.onclick = () => {
+
+                messageBox.classList.add('hidden');
+
+            };
+
+
+
+            buttonContainer.appendChild(confirmBtn);
+
+            buttonContainer.appendChild(cancelBtn);
+
+
+
+            messageTitle.textContent = title;
+
+            messageBody.textContent = message;
+
+            messageBox.classList.remove('hidden');
+
+        }
+
+
+
+        // --- LOCAL STORAGE FUNCTIONS ---
+
+        function saveData() {
+
+            try {
+
+                localStorage.setItem('budgetBuddyData', JSON.stringify(appData));
+
+            } catch (e) {
+
+                showMessage('Error', 'Could not save data to LocalStorage. It might be full.');
+
+            }
+
+        }
+
+
+
+        function loadData() {
+
+            try {
+
+                const savedData = localStorage.getItem('budgetBuddyData');
+
+                if (savedData) {
+
+                    appData = JSON.parse(savedData);
+
+                }
+
+            } catch (e) {
+
+                console.error("Failed to load data from LocalStorage:", e);
+
+                // Clear corrupted data if needed
+
+                // localStorage.removeItem('budgetBuddyData');  
+
+            }
+
+        }
+
+
+
+        // --- UI & RENDERING FUNCTIONS ---
+
+        function switchPage(pageId) {
+
+            pages.forEach(page => {
+
+                if (page.id === pageId) {
+
+                    page.classList.remove('hidden');
+
+                    page.classList.add('active-page');
+
+                } else {
+
+                    page.classList.add('hidden');
+
+                    page.classList.remove('active-page');
+
+                }
+
+            });
+
+
+
+            navItems.forEach(item => {
+
+                if (item.getAttribute('data-page') === pageId) {
+
+                    item.classList.add('bg-gray-200', 'dark:bg-gray-700');
+
+                } else {
+
+                    item.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+
+                }
+
+            });
+
+
+
+            // Update state and save
+
+            appData.settings.lastPage = pageId;
+
+            saveData();
+
+
+
+            // Re-render the charts for the new page
+
+            if (pageId === 'dashboard') {
+
+                renderDashboardCharts();
+
+            } else if (pageId === 'reports') {
+
+                renderReportsCharts();
+
+            }
+
+        }
+
+
+
+        function applyLanguage(lang) {
+
+            const currentTranslations = translations[lang] || translations['en'];
+
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+
+                const key = el.getAttribute('data-lang-key');
+
+                const translationValue = currentTranslations[key];
+
+
+
+                if (translationValue) {
+
+                    if (el.tagName === 'INPUT' && el.getAttribute('type') === 'text' || el.getAttribute('type') === 'number') {
+
+                         el.placeholder = translationValue;
+
+                    } else if (el.tagName === 'BUTTON') {
+
+                         el.textContent = translationValue;
+
+                    } else if (el.tagName === 'OPTION') {
+
+                         el.textContent = translationValue;
+
+                    } else {
+
+                         el.textContent = translationValue;
+
+                    }
+
+                }
+
+            });
+
+            // Handle special cases like budget alert message
+
+            appData.settings.language = lang;
+
+            saveData();
+
+        }
+
+
+
+        function renderTransactions(type) {
+
+            const tableBody = type === 'income' ? incomeTableBody : expenseTableBody;
+
+            const transactions = appData[type];
+
+            
+
+            tableBody.innerHTML = ''; // Clear table
+
+            transactions.forEach(t => {
+
+                const row = document.createElement('tr');
+
+                row.className = "hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors";
+
+                row.innerHTML = `
+
+                    <td class="py-2 px-4 whitespace-nowrap">${t.date}</td>
+
+                    <td class="py-2 px-4 whitespace-nowrap">${t.description}</td>
+
+                    <td class="py-2 px-4 whitespace-nowrap">${t.category}</td>
+
+                    <td class="py-2 px-4 whitespace-nowrap">₹${t.amount.toFixed(2)}</td>
+
+                    <td class="py-2 px-4 text-right whitespace-nowrap">
+
+                        <button onclick="deleteTransaction('${t.id}', '${type}')" class="text-red-500 hover:text-red-700 transition-colors">
+
+                            <i class="fas fa-trash-alt"></i>
+
+                        </button>
+
+                    </td>
+
+                `;
+
+                tableBody.appendChild(row);
+
+            });
+
+        }
+
+
+
+        function renderBudgets() {
+
+            budgetList.innerHTML = '';
+
+            const currentLang = appData.settings.language;
+
+            const currentTranslations = translations[currentLang] || translations.en;
+
+
+
+            for (const category in appData.budgets) {
+
+                const amount = appData.budgets[category];
+
+                const totalSpent = appData.expenses
+
+                    .filter(exp => exp.category === category)
+
+                    .reduce((sum, exp) => sum + exp.amount, 0);
+
+
+
+                const progress = Math.min((totalSpent / amount) * 100, 100);
+
+                const progressColor = progress > 90 ? 'bg-[--negative]' : 'bg-[--positive]';
+
+                
+
+                const card = document.createElement('div');
+
+                card.className = "bg-[--card-color] p-4 rounded-lg shadow-sm";
+
+                card.innerHTML = `
+
+                    <div class="flex items-center justify-between mb-2">
+
+                        <span class="font-semibold capitalize">${currentTranslations[category] || category}</span>
+
+                        <span class="text-sm text-[--text-secondary] ">₹${totalSpent.toFixed(2)} / ₹${amount.toFixed(2)}</span>
+
+                        <button onclick="deleteBudget('${category}')" class="text-gray-400 hover:text-red-500 transition-colors">
+
+                            <i class="fas fa-times"></i>
+
+                        </button>
+
+                    </div>
+
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+
+                        <div class="h-2.5 rounded-full ${progressColor}" style="width: ${progress}%"></div>
+
+                    </div>
+
+                `;
+
+                budgetList.appendChild(card);
+
+            }
+
+        }
+
+
+
+        function updateDashboardMetrics() {
+
+            const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
+
+            const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
+
+            const profitLoss = totalRevenue - totalExpenses;
+
+            const cashFlow = totalRevenue - totalExpenses;
+
+            
+
+            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
+
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
+
+            
+
+            const profitLossEl = document.getElementById('profitOrLoss');
+
+            profitLossEl.textContent = `₹${profitLoss.toFixed(2)}`;
+
+            profitLossEl.className = profitLoss >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
+
+
+
+            const cashFlowEl = document.getElementById('cashFlow');
+
+            cashFlowEl.textContent = `₹${cashFlow.toFixed(2)}`;
+
+            cashFlowEl.className = cashFlow >= 0 ? 'text-3xl font-bold text-[--positive]' : 'text-3xl font-bold text-[--negative]';
+
+        }
+
+
+
+        function renderDashboardCharts() {
+
+            // Destroy existing charts to prevent stacking
+
+            if (revenueExpensesChart) revenueExpensesChart.destroy();
+
+            if (expensePieChart) expensePieChart.destroy();
+
+
+
+            // Revenue and Expenses over time
+
+            const monthlyData = {};
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            appData.income.forEach(t => {
+
+                const month = new Date(t.date).getMonth();
+
+                if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
+
+                monthlyData[month].income += t.amount;
+
+            });
+
+            appData.expenses.forEach(t => {
+
+                const month = new Date(t.date).getMonth();
+
+                if (!monthlyData[month]) monthlyData[month] = { income: 0, expenses: 0 };
+
+                monthlyData[month].expenses += t.amount;
+
+            });
+
+
+
+            const labels = Object.keys(monthlyData).sort((a,b) => a - b).map(m => months[m]);
+
+            const revenueValues = Object.keys(monthlyData).sort((a,b) => a - b).map(m => monthlyData[m].income);
+
+            const expenseValues = Object.keys(monthlyData).sort((a,b) => a - b).map(m => monthlyData[m].expenses);
+
+            
+
+            const revenueExpensesCtx = document.getElementById('revenueExpensesChart').getContext('2d');
+
+            revenueExpensesChart = new Chart(revenueExpensesCtx, {
+
+                type: 'line',
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [
+
+                        { label: 'Revenue', data: revenueValues, borderColor: '#10B981', fill: false, tension: 0.1 },
+
+                        { label: 'Expenses', data: expenseValues, borderColor: '#DC2626', fill: false, tension: 0.1 }
+
+                    ]
+
+                }
+
+            });
+
+
+
+            // Expense Breakdown Pie Chart
+
+            const expenseCategories = {};
+
+            appData.expenses.forEach(exp => {
+
+                expenseCategories[exp.category] = (expenseCategories[exp.category] || 0) + exp.amount;
+
+            });
+
+
+
+            const pieData = Object.values(expenseCategories);
+
+            const pieLabels = Object.keys(expenseCategories).map(cat => translations[appData.settings.language][cat] || cat);
+
+
+
+            const pieCtx = document.getElementById('expensePieChart').getContext('2d');
+
+            expensePieChart = new Chart(pieCtx, {
+
+                type: 'pie',
+
+                data: {
+
+                    labels: pieLabels,
+
+                    datasets: [{
+
+                        data: pieData,
+
+                        backgroundColor: [
+
+                            '#2563EB', '#DC2626', '#10B981', '#F59E0B', '#A78BFA', '#475569'
+
+                        ],
+
+                        hoverOffset: 4
+
+                    }]
+
+                }
+
+            });
+
+        }
+
+
+
+        function renderReportsCharts() {
+
+            // Destroy existing charts
+
+            if (monthlyReportChart) monthlyReportChart.destroy();
+
+            if (quarterlyReportChart) quarterlyReportChart.destroy();
+
+            
+
+            // Monthly Report
+
+            const monthlyData = {};
+
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            const year = new Date().getFullYear();
+
+            for (let i = 0; i < 12; i++) {
+
+                monthlyData[months[i]] = { revenue: 0, expenses: 0 };
+
+            }
+
+            appData.income.forEach(t => {
+
+                const date = new Date(t.date);
+
+                if (date.getFullYear() === year) {
+
+                    monthlyData[months[date.getMonth()]].revenue += t.amount;
+
+                }
+
+            });
+
+            appData.expenses.forEach(t => {
+
+                const date = new Date(t.date);
+
+                if (date.getFullYear() === year) {
+
+                    monthlyData[months[date.getMonth()]].expenses += t.amount;
+
+                }
+
+            });
+
+
+
+            const monthlyLabels = Object.keys(monthlyData);
+
+            const monthlyRevenue = monthlyLabels.map(m => monthlyData[m].revenue);
+
+            const monthlyExpenses = monthlyLabels.map(m => monthlyData[m].expenses);
+
+            
+
+            const monthlyCtx = document.getElementById('monthlyReportChart').getContext('2d');
+
+            monthlyReportChart = new Chart(monthlyCtx, {
+
+                type: 'bar',
+
+                data: {
+
+                    labels: monthlyLabels,
+
+                    datasets: [
+
+                        { label: 'Revenue', data: monthlyRevenue, backgroundColor: 'rgba(16, 185, 129, 0.6)' },
+
+                        { label: 'Expenses', data: monthlyExpenses, backgroundColor: 'rgba(220, 38, 38, 0.6)' }
+
+                    ]
+
+                }
+
+            });
+
+
+
+            // Quarterly Report
+
+            const quarterlyData = { 'Q1': { revenue: 0, expenses: 0 }, 'Q2': { revenue: 0, expenses: 0 }, 'Q3': { revenue: 0, expenses: 0 }, 'Q4': { revenue: 0, expenses: 0 }};
+
+            appData.income.forEach(t => {
+
+                const month = new Date(t.date).getMonth();
+
+                const quarter = `Q${Math.floor(month / 3) + 1}`;
+
+                quarterlyData[quarter].revenue += t.amount;
+
+            });
+
+            appData.expenses.forEach(t => {
+
+                const month = new Date(t.date).getMonth();
+
+                const quarter = `Q${Math.floor(month / 3) + 1}`;
+
+                quarterlyData[quarter].expenses += t.amount;
+
+            });
+
+            
+
+            const quarterlyLabels = Object.keys(quarterlyData);
+
+            const quarterlyRevenue = quarterlyLabels.map(q => quarterlyData[q].revenue);
+
+            const quarterlyExpenses = quarterlyLabels.map(q => quarterlyData[q].expenses);
+
+
+
+            const quarterlyCtx = document.getElementById('quarterlyReportChart').getContext('2d');
+
+            quarterlyReportChart = new Chart(quarterlyCtx, {
+
+                type: 'bar',
+
+                data: {
+
+                    labels: quarterlyLabels,
+
+                    datasets: [
+
+                        { label: 'Revenue', data: quarterlyRevenue, backgroundColor: 'rgba(16, 185, 129, 0.6)' },
+
+                        { label: 'Expenses', data: quarterlyExpenses, backgroundColor: 'rgba(220, 38, 38, 0.6)' }
+
+                    ]
+
+                }
+
+            });
+
+        }
+
+        
+
+        // --- CRUD OPERATIONS ---
+
+        function addTransaction(type, description, amount, category) {
+
+            const transaction = {
+
+                id: generateId(),
+
+                date: new Date().toISOString().split('T')[0],
+
+                description: description,
+
+                amount: parseFloat(amount),
+
+                category: category
+
+            };
+
+            appData[type].push(transaction);
+
+            
+
+            // Check budget for expenses
+
+            if (type === 'expenses' && appData.budgets[category]) {
+
+                const totalSpent = appData.expenses
+
+                    .filter(exp => exp.category === category)
+
+                    .reduce((sum, exp) => sum + exp.amount, 0);
+
+                if (totalSpent > appData.budgets[category]) {
+
+                    const currentLang = appData.settings.language;
+
+                    const msg = translations[currentLang]?.budgetAlertMsg(translations[currentLang]?.[category] || category, totalSpent);
+
+                    showMessage(translations[currentLang]?.budgetAlertTitle, msg);
+
+                }
+
+            }
+
+
+
+            saveData();
+
+            updateDashboardMetrics();
+
+            renderTransactions(type);
+
+            if (type === 'expenses') {
+
+                renderBudgets();
+
+            }
+
+        }
+
+
+
+        function deleteTransaction(id, type) {
+
+            appData[type] = appData[type].filter(t => t.id !== id);
+
+            saveData();
+
+            updateDashboardMetrics();
+
+            renderTransactions(type);
+
+            if (type === 'expenses') {
+
+                renderBudgets();
+
+            }
+
+        }
+
+        
+
+        function addBudget(category, amount) {
+
+            appData.budgets[category] = parseFloat(amount);
+
+            saveData();
+
+            renderBudgets();
+
+        }
+
+
+
+        function deleteBudget(category) {
+
+            delete appData.budgets[category];
+
+            saveData();
+
+            renderBudgets();
+
+        }
+
+
+
+        function deleteAllData() {
+
+            const currentLang = appData.settings.language;
+
+            const currentTranslations = translations[currentLang] || translations.en;
+
+            showConfirmMessage(
+
+                currentTranslations.confirmDeletion,
+
+                currentTranslations.deletionMessage,
+
+                () => {
+
+                    localStorage.removeItem('budgetBuddyData');
+
+                    location.reload();
+
+                }
+
+            );
+
+        }
+
+
+
+        // --- DATA IMPORT/EXPORT ---
+
+        function exportData() {
+
+            const dataStr = JSON.stringify(appData, null, 2);
+
+            const blob = new Blob([dataStr], { type: "application/json" });
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+
+            link.href = url;
+
+            link.download = 'budget_buddy_data.json';
+
+            link.click();
+
+            URL.revokeObjectURL(url);
+
+        }
+
+        
+
+        function importData(file) {
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+
+                try {
+
+                    const importedData = JSON.parse(e.target.result);
+
+                    // Simple validation
+
+                    if (importedData.expenses && importedData.income) {
+
+                        appData = importedData;
+
+                        saveData();
+
+                        location.reload(); // Reload to apply changes
+
+                    } else {
+
+                        showMessage('Import Error', 'Invalid data format. Please select a valid Budget Buddy JSON file.');
+
+                    }
+
+                } catch (e) {
+
+                    showMessage('Import Error', 'Could not parse the JSON file.');
+
+                }
+
+            };
+
+            reader.readAsText(file);
+
+        }
+
+        
+
+        function exportCsv() {
+
+            const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))];
+
+            
+
+            if (allTransactions.length === 0) {
+
+                showMessage('Export Error', 'No data to export.');
+
+                return;
+
+            }
+
+
+
+            const header = ["Date", "Description", "Category", "Amount", "Type"];
+
+            const csvRows = [header.join(',')];
+
+            
+
+            allTransactions.forEach(t => {
+
+                const row = [t.date, t.description, t.category, t.amount, t.type].map(item => `"${item}"`).join(',');
+
+                csvRows.push(row);
+
+            });
+
+
+
+            const csvString = csvRows.join('\n');
+
+            const blob = new Blob([csvString], { type: 'text/csv' });
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+
+            link.href = url;
+
+            link.download = 'business_budget_report.csv';
+
+            link.click();
+
+            URL.revokeObjectURL(url);
+
+        }
+
+
+
+        // --- PDF EXPORT LOGIC ---
+
+        function exportToPdf() {
+
+            const currentLang = appData.settings.language;
+
+            const currentTranslations = translations[currentLang] || translations.en;
+
+            const totalRevenue = appData.income.reduce((sum, t) => sum + t.amount, 0);
+
+            const totalExpenses = appData.expenses.reduce((sum, t) => sum + t.amount, 0);
+
+            const allTransactions = [...appData.income.map(t => ({...t, type: 'Income'})), ...appData.expenses.map(t => ({...t, type: 'Expense'}))].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+
+
+            // Generate report chart as an image
+
+            renderReportsCharts();
+
+            const monthlyChartImage = document.getElementById('monthlyReportChart').toDataURL('image/png');
+
+
+
+            // Build the HTML content for the PDF
+
+            let pdfHtml = `
+
+                <div class="p-8 font-sans">
+
+                    <h1 class="text-3xl font-bold text-center mb-6" style="color: #2563EB;">${currentTranslations.statementTitle}</h1>
+
+                    
+
+                    <div class="mb-8">
+
+                        <h2 class="text-xl font-bold mb-2" style="color: #2563EB;">${currentTranslations.statementSummary}</h2>
+
+                        <div class="grid grid-cols-2 gap-4 text-center">
+
+                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
+
+                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.revenueCard}</h3>
+
+                                <p class="text-2xl font-bold" style="color: #10B981;">₹${totalRevenue.toFixed(2)}</p>
+
+                            </div>
+
+                            <div class="p-4 rounded-lg shadow-sm" style="background-color: #E5E7EB;">
+
+                                <h3 class="font-semibold text-lg" style="color: #475569;">${currentTranslations.expensesCard}</h3>
+
+                                <p class="text-2xl font-bold" style="color: #DC2626;">₹${totalExpenses.toFixed(2)}</p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="mb-8">
+
+                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.monthlyReport}</h2>
+
+                        <img src="${monthlyChartImage}" style="width: 100%; height: auto; display: block; margin: 0 auto;"/>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <h2 class="text-xl font-bold mb-4" style="color: #2563EB;">${currentTranslations.statementTransactions}</h2>
+
+                        <table class="w-full text-left border-collapse" style="font-size: 14px;">
+
+                            <thead>
+
+                                <tr style="background-color: #E5E7EB;">
+
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDate}</th>
+
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableDescription}</th>
+
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableCategory}</th>
+
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">${currentTranslations.tableAmount}</th>
+
+                                    <th class="p-2 border-b-2 border-gray-300" style="color: #111827;">Type</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+            `;
+
+            allTransactions.forEach(t => {
+
+                const amountColor = t.type === 'Income' ? '#10B981' : '#DC2626';
+
+                pdfHtml += `
+
+                    <tr style="border-bottom: 1px solid #E5E7EB;">
+
+                        <td class="p-2">${t.date}</td>
+
+                        <td class="p-2">${t.description}</td>
+
+                        <td class="p-2">${t.category}</td>
+
+                        <td class="p-2" style="color: ${amountColor};">₹${t.amount.toFixed(2)}</td>
+
+                        <td class="p-2">${t.type}</td>
+
+                    </tr>
+
+                `;
+
+            });
+
+            pdfHtml += `
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            `;
+
+            
+
+            pdfContent.innerHTML = pdfHtml;
+
+
+
+            // Generate the PDF
+
+            const options = {
+
+                margin: 1,
+
+                filename: `financial_statement_${new Date().toISOString().split('T')[0]}.pdf`,
+
+                image: { type: 'jpeg', quality: 0.98 },
+
+                html2canvas: { scale: 2 },
+
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+
+            };
+
+
+
+            html2pdf().from(pdfContent).set(options).save();
+
+        }
+
+
+
+        // --- EVENT LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            loadData();
+
+            applyLanguage(appData.settings.language);
+
+            languageSwitcher.value = appData.settings.language;
+
+            
+
+            document.body.classList.toggle('dark-mode', appData.settings.darkMode);
+
+            darkModeToggle.checked = appData.settings.darkMode;
+
+
+
+            renderTransactions('income');
+
+            renderTransactions('expenses');
+
+            renderBudgets();
+
+            updateDashboardMetrics();
+
+            
+
+            switchPage(appData.settings.lastPage);
+
+        });
+
+
+
+        navItems.forEach(item => {
+
+            item.addEventListener('click', (e) => {
+
+                e.preventDefault();
+
+                const pageId = item.getAttribute('data-page');
+
+                switchPage(pageId);
+
+            });
+
+        });
+
+
+
+        incomeForm.addEventListener('submit', (e) => {
+
+            e.preventDefault();
+
+            addTransaction('income', incomeForm.incomeDescription.value, incomeForm.incomeAmount.value, incomeForm.incomeCategory.value);
+
+            incomeForm.reset();
+
+        });
+
+
+
+        expenseForm.addEventListener('submit', (e) => {
+
+            e.preventDefault();
+
+            addTransaction('expenses', expenseForm.expenseDescription.value, expenseForm.expenseAmount.value, expenseForm.expenseCategory.value);
+
+            expenseForm.reset();
+
+        });
+
+
+
+        budgetForm.addEventListener('submit', (e) => {
+
+            e.preventDefault();
+
+            addBudget(budgetForm.budgetCategory.value, budgetForm.budgetAmount.value);
+
+            budgetForm.reset();
+
+        });
+
+
+
+        languageSwitcher.addEventListener('change', (e) => {
+
+            applyLanguage(e.target.value);
+
+        });
+
+
+
+        darkModeToggle.addEventListener('change', () => {
+
+            document.body.classList.toggle('dark-mode');
+
+            appData.settings.darkMode = darkModeToggle.checked;
+
+            saveData();
+
+        });
+
+
+
+        exportDataBtn.addEventListener('click', exportData);
+
+        
+
+        importDataBtn.addEventListener('click', () => {
+
+            importFile.click();
+
+        });
+
+        
+
+        importFile.addEventListener('change', (e) => {
+
+            const file = e.target.files[0];
+
+            if (file) {
+
+                importData(file);
+
+            }
+
+        });
+
+        
+
+        exportCsvBtn.addEventListener('click', exportCsv);
+
+        deleteAllDataBtn.addEventListener('click', deleteAllData);
+
+        downloadPdfBtn.addEventListener('click', exportToPdf);
+
+    </script>
+
+
 
 </body>
+
 </html>
