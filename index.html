@@ -60,6 +60,9 @@
       <button onclick="switchSection('budgets')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
         <span class="material-symbols-outlined">pie_chart</span> Budget Planning
       </button>
+      <button onclick="switchSection('goals')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+        <span class="material-symbols-outlined">savings</span> Savings Goals
+      </button>
       <button onclick="switchSection('ai')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
         <span class="material-symbols-outlined">lightbulb</span> AI Suggestions
       </button>
@@ -128,6 +131,11 @@
       <!-- Filters & Actions -->
       <div class="mb-4 flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
+          <label class="text-sm">Search</label>
+          <input type="text" id="searchInput" placeholder="Search transactions..." class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900" />
+        </div>
+
+        <div class="flex items-center gap-2">
           <label class="text-sm">Category</label>
           <div class="relative custom-select">
             <button id="catSelectBtn" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 flex items-center gap-2">
@@ -160,6 +168,8 @@
         <div class="ml-auto flex items-center gap-2">
           <button id="exportCsv" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">Export CSV</button>
           <button id="exportJson" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">Backup JSON</button>
+          <button id="importCsv" class="px-3 py-2 rounded-lg border bg-primary text-white">Import CSV</button>
+          <button id="importJson" class="px-3 py-2 rounded-lg border bg-primary text-white">Restore JSON</button>
         </div>
       </div>
 
@@ -225,6 +235,26 @@
       </div>
     </section>
 
+    <!-- Savings Goals -->
+    <section id="goals" class="page-section">
+      <h3 class="text-lg font-semibold mb-4">Savings Goals</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Create Goal</h4>
+          <form id="goalForm" class="grid gap-2">
+            <input id="goalName" placeholder="Goal Name (e.g., Vacation)" class="px-3 py-2 rounded-lg border" />
+            <input id="goalTarget" type="number" step="0.01" placeholder="Target Amount" class="px-3 py-2 rounded-lg border" />
+            <input id="goalDeadline" type="date" placeholder="Deadline (optional)" class="px-3 py-2 rounded-lg border" />
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg">Create Goal</button>
+          </form>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Your Goals</h4>
+          <div id="goalsList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- AI Suggestions -->
     <section id="ai" class="page-section">
       <h3 class="text-lg font-semibold mb-4">AI Suggestions</h3>
@@ -237,7 +267,7 @@
 <script>
   // State management using localStorage
   const LS_KEY = 'budgetBuddy_v1';
-  const defaultState = { transactions: [], budgets: {}, recurring: [] };
+  const defaultState = { transactions: [], budgets: {}, recurring: [], goals: [] };
 
   function loadState() {
     try {
@@ -298,6 +328,16 @@
     elList.innerHTML='';
     let list = state.transactions.slice();
 
+    // Apply search filter
+    const searchTerm = document.getElementById('searchInput')?.value?.toLowerCase() || '';
+    if(searchTerm) {
+      list = list.filter(t => 
+        t.desc.toLowerCase().includes(searchTerm) ||
+        t.category.toLowerCase().includes(searchTerm) ||
+        t.amount.toString().includes(searchTerm)
+      );
+    }
+
     // Apply category filter
     if(activeCategoryFilter !== 'All') list = list.filter(t=>t.category===activeCategoryFilter);
     // Type filter
@@ -334,6 +374,9 @@
       right.appendChild(amt);
 
       const controls = document.createElement('div'); controls.className='flex gap-2 justify-end mt-2';
+      const editBtn = document.createElement('button'); editBtn.className='text-xs px-2 py-1 rounded bg-primary text-white'; editBtn.textContent='Edit';
+      editBtn.addEventListener('click', ()=>{ editTransaction(state.transactions.length-1-i); });
+      controls.appendChild(editBtn);
       const delBtn = document.createElement('button'); delBtn.className='text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800'; delBtn.textContent='Delete';
       delBtn.addEventListener('click', ()=>{ removeTransaction(state.transactions.length-1-i); });
       controls.appendChild(delBtn);
@@ -348,6 +391,29 @@
     if(!confirm('Delete this transaction?')) return;
     state.transactions.splice(idx,1);
     saveState(state); renderAll();
+  }
+
+  function editTransaction(idx){
+    const t = state.transactions[idx];
+    if(!t) return;
+    
+    // Populate the form with transaction data
+    document.getElementById('tDate').value = t.date;
+    document.getElementById('tDesc').value = t.desc;
+    document.getElementById('tAmount').value = t.amount;
+    document.getElementById('miniCatLabel').textContent = t.category;
+    document.getElementById('miniCatIcon').textContent = categoryIcons[t.category] || 'category';
+    
+    // Remove the transaction (will be re-added when form is submitted)
+    state.transactions.splice(idx, 1);
+    saveState(state);
+    
+    // Scroll to the form
+    switchSection('transactions');
+    setTimeout(() => {
+      window.scrollTo({top: document.getElementById('addForm').offsetTop - 20, behavior:'smooth'});
+      document.getElementById('tDesc').focus();
+    }, 100);
   }
 
   function addTransaction(t){ state.transactions.push(t); saveState(state); renderAll(); }
@@ -376,6 +442,82 @@
       right.innerHTML = `<div class="text-xs ${spent>limit? 'text-red-500':'text-slate-500'}">${spent>limit? 'Overspent':'On track'}</div><div class="h-2 bg-slate-200 rounded-full mt-2" style="width:120px"><div class="h-2 bg-primary rounded-full" style="width:${pct}%"></div></div>`;
 
       item.appendChild(left); item.appendChild(right); budgetsContainer.appendChild(item);
+    });
+  }
+
+  // Goals
+  function renderGoals(){
+    const goalsContainer = document.getElementById('goalsList');
+    goalsContainer.innerHTML = '';
+    
+    if(!state.goals) state.goals = [];
+    
+    if(state.goals.length === 0) {
+      goalsContainer.appendChild(el('div','No goals yet. Create one to start saving!','text-slate-500'));
+      return;
+    }
+    
+    // Calculate current savings (total income - total expenses)
+    const totalIncome = state.transactions.filter(t => t.amount > 0).reduce((s,x) => s + x.amount, 0);
+    const totalExpenses = state.transactions.filter(t => t.amount < 0).reduce((s,x) => s + Math.abs(x.amount), 0);
+    const currentSavings = totalIncome - totalExpenses;
+    
+    state.goals.forEach((goal, idx) => {
+      const item = document.createElement('div');
+      item.className = 'p-3 bg-white dark:bg-slate-900 rounded-xl border';
+      
+      const header = document.createElement('div');
+      header.className = 'flex items-center justify-between mb-2';
+      
+      const title = document.createElement('div');
+      title.className = 'font-semibold';
+      title.textContent = goal.name;
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => {
+        if(confirm(`Delete goal "${goal.name}"?`)){
+          state.goals.splice(idx, 1);
+          saveState(state);
+          renderAll();
+        }
+      });
+      
+      header.appendChild(title);
+      header.appendChild(deleteBtn);
+      
+      const progress = Math.min(100, Math.round((currentSavings / goal.target) * 100));
+      const progressText = document.createElement('div');
+      progressText.className = 'text-xs text-slate-500 mb-1';
+      progressText.textContent = `${currency(currentSavings)} of ${currency(goal.target)}`;
+      
+      if(goal.deadline){
+        const deadlineDate = new Date(goal.deadline);
+        const daysLeft = Math.ceil((deadlineDate - new Date()) / (1000 * 60 * 60 * 24));
+        const deadlineText = document.createElement('div');
+        deadlineText.className = `text-xs ${daysLeft < 0 ? 'text-red-500' : 'text-slate-500'} mb-2`;
+        deadlineText.textContent = daysLeft < 0 ? `Deadline passed ${Math.abs(daysLeft)} days ago` : `${daysLeft} days remaining`;
+        progressText.appendChild(deadlineText);
+      }
+      
+      const progressBar = document.createElement('div');
+      progressBar.className = 'h-2 bg-slate-200 rounded-full';
+      const progressFill = document.createElement('div');
+      progressFill.className = `h-2 ${progress >= 100 ? 'bg-green-500' : 'bg-primary'} rounded-full`;
+      progressFill.style.width = `${progress}%`;
+      progressBar.appendChild(progressFill);
+      
+      const statusText = document.createElement('div');
+      statusText.className = `text-xs mt-1 ${progress >= 100 ? 'text-green-500' : 'text-slate-500'}`;
+      statusText.textContent = progress >= 100 ? '🎉 Goal achieved!' : `${progress}% complete`;
+      
+      item.appendChild(header);
+      item.appendChild(progressText);
+      item.appendChild(progressBar);
+      item.appendChild(statusText);
+      
+      goalsContainer.appendChild(item);
     });
   }
 
@@ -439,10 +581,19 @@
     const largest = state.transactions.reduce((max,t)=> Math.max(max, Math.abs(t.amount)),0);
     if(largest>10000) suggestions.push({title:'Large Expense Detected', body:`A single transaction exceeded ₹10,000. Check if this was intentional.`});
 
-    // overspent budgets
+    // overspent budgets and budget alerts
     Object.keys(state.budgets).forEach(k=>{
       const spent = state.transactions.filter(t=>t.category===k && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
-      if(spent > state.budgets[k]) suggestions.push({title:`Budget exceeded: ${k}`, body:`You've spent ${currency(-spent)} which exceeds budget of ${currency(state.budgets[k])}.`});
+      const limit = state.budgets[k];
+      const pct = (spent / limit) * 100;
+      
+      if(spent > limit) {
+        suggestions.push({title:`Budget exceeded: ${k}`, body:`You've spent ${currency(-spent)} which exceeds budget of ${currency(limit)}.`});
+      } else if(pct >= 90) {
+        suggestions.push({title:`⚠️ Budget Alert: ${k}`, body:`You've used ${Math.round(pct)}% of your ${k} budget. Only ${currency(limit - spent)} remaining.`});
+      } else if(pct >= 80) {
+        suggestions.push({title:`Budget Warning: ${k}`, body:`You've used ${Math.round(pct)}% of your ${k} budget. Consider slowing down spending.`});
+      }
     });
 
     if(suggestions.length===0) aiContainer.appendChild(el('div','No suggestions right now — you are on track.','p-4 bg-white dark:bg-slate-900 rounded-xl border text-slate-500'));
@@ -462,6 +613,88 @@
     const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download='budgetBuddy_backup.json'; a.click(); URL.revokeObjectURL(url);
+  }
+
+  // Import functions
+  function importCSV(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const csv = event.target.result;
+          const lines = csv.split('\n').filter(l => l.trim());
+          if(lines.length < 2) { alert('CSV file is empty or invalid'); return; }
+          
+          // Skip header row
+          const dataRows = lines.slice(1);
+          const imported = [];
+          
+          dataRows.forEach(line => {
+            // Simple CSV parser (handles quoted fields)
+            const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+            if(!matches || matches.length < 4) return;
+            
+            const date = matches[0].replace(/"/g, '').trim();
+            const desc = matches[1].replace(/"/g, '').trim();
+            const category = matches[2].replace(/"/g, '').trim();
+            const amount = parseFloat(matches[3].replace(/"/g, '').trim());
+            
+            if(date && desc && category && !isNaN(amount)){
+              imported.push({date, desc, category, amount});
+            }
+          });
+          
+          if(imported.length > 0){
+            state.transactions.push(...imported);
+            saveState(state);
+            renderAll();
+            alert(`Successfully imported ${imported.length} transaction(s)`);
+          } else {
+            alert('No valid transactions found in CSV file');
+          }
+        } catch(err) {
+          alert('Error parsing CSV file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
+  function importJSON(){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if(!imported.transactions || !Array.isArray(imported.transactions)){
+            alert('Invalid backup file format');
+            return;
+          }
+          
+          if(confirm(`This will restore ${imported.transactions.length} transaction(s), ${Object.keys(imported.budgets || {}).length} budget(s), and ${(imported.recurring || []).length} recurring template(s). Continue?`)){
+            state = imported;
+            saveState(state);
+            renderAll();
+            alert('Backup restored successfully');
+          }
+        } catch(err) {
+          alert('Error parsing JSON file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   // Recurring templates
@@ -499,7 +732,7 @@
   }
 
   // Render all
-  function renderAll(){ renderTransactions(); renderBudgets(); computeTotals('month'); renderCharts(); renderAISuggestions(); }
+  function renderAll(){ renderTransactions(); renderBudgets(); renderGoals(); computeTotals('month'); renderCharts(); renderAISuggestions(); }
 
   // Form handlers
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -516,6 +749,7 @@
     // filters change
     document.getElementById('typeFilter').addEventListener('change', renderTransactions);
     document.getElementById('sortBy').addEventListener('change', renderTransactions);
+    document.getElementById('searchInput').addEventListener('input', renderTransactions);
 
     // category list selection also updates activeCategoryFilter when chosen from main list
     document.getElementById('catSelectList').addEventListener('click', ()=>{
@@ -527,6 +761,10 @@
     // exporters
     document.getElementById('exportCsv').addEventListener('click', exportCSV);
     document.getElementById('exportJson').addEventListener('click', exportJSON);
+    
+    // importers
+    document.getElementById('importCsv').addEventListener('click', importCSV);
+    document.getElementById('importJson').addEventListener('click', importJSON);
 
     // form submits
     document.getElementById('addForm').addEventListener('submit', e=>{
@@ -543,6 +781,24 @@
     });
 
     document.getElementById('budgetForm').addEventListener('submit', e=>{ e.preventDefault(); const cat=document.getElementById('bCategory').value.trim(); const amt=parseFloat(document.getElementById('bAmount').value); if(!cat||isNaN(amt)){ alert('Provide category and amount'); return;} state.budgets[cat]=amt; saveState(state); renderAll(); document.getElementById('budgetForm').reset(); });
+
+    document.getElementById('goalForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('goalName').value.trim();
+      const target = parseFloat(document.getElementById('goalTarget').value);
+      const deadline = document.getElementById('goalDeadline').value;
+      
+      if(!name || isNaN(target) || target <= 0) {
+        alert('Please provide a valid goal name and target amount');
+        return;
+      }
+      
+      if(!state.goals) state.goals = [];
+      state.goals.push({ name, target, deadline: deadline || null });
+      saveState(state);
+      renderAll();
+      document.getElementById('goalForm').reset();
+    });
 
     document.getElementById('saveRecurring').addEventListener('click', (e)=>{ e.preventDefault(); saveRecurringTemplate(); });
 
