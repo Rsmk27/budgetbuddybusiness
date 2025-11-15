@@ -1,279 +1,567 @@
 <!DOCTYPE html>
-<html lang="en" class="light-mode">
+<html lang="en" class="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Budget Buddy</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style type="text/tailwindcss">
-        /* Custom styles and colors for the app */
-        @layer base {
-            :root {
-                --primary: #2563EB; /* Indigo */
-                --secondary: #A78BFA; /* Lavender (for secondary insights) */
-                --positive: #10B981; /* Emerald */
-                --negative: #DC2626; /* Crimson */
-                --warning: #F59E0B; /* Golden Amber */
-                --bg-light: #F9FAFB; /* Off-White */
-                --bg-dark: #1f2937; /* gray-800 */
-                --text-light: #111827; /* Charcoal */
-                --text-secondary: #475569; /* Slate Gray */
-                --text-dark: #f9fafb; /* gray-50 */
-                --card-light: #E5E7EB; /* Light Gray */
-                --card-dark: #374151; /* gray-700 */
-                --border-light: #e5e7eb; /* gray-200 */
-                --border-dark: #4b5563; /* gray-600 */
-            }
-            .light-mode {
-                --bg-color: var(--bg-light);
-                --text-color: var(--text-light);
-                --card-color: var(--card-light);
-                --border-color: var(--border-light);
-            }
-            .dark-mode {
-                --bg-color: var(--bg-dark);
-                --text-color: var(--text-dark);
-                --card-color: var(--card-dark);
-                --border-color: var(--border-dark);
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js and Datalabels Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- html2pdf.js for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Budget Buddy — Expense Tracker</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#19a1e6",
+            "background-light": "#f6f7f8",
+            "background-dark": "#000000",
+            "panel-light": "#ffffff",
+            "panel-dark": "#000000",
+          },
+          fontFamily: { display: ["Manrope", "sans-serif"] },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    .page-section { display: none; }
+    .active-section { display: block; }
+    .size-10 { width:40px; height:40px; }
+    .size-12 { width:48px; height:48px; }
+    /* custom dropdown */
+    .custom-select { position: relative; }
+    .custom-select-list { position: absolute; z-index: 40; background: white; border:1px solid #e5e7eb; max-height:200px; overflow:auto; width:100%; }
+    .custom-select-item { padding:8px 10px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+    .custom-select-item:hover { background:#f3f4f6 }
+  </style>
 </head>
-<body class="bg-[--bg-color] text-[--text-color] font-[Inter] transition-colors duration-300">
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-200">
+<div class="flex min-h-screen w-full">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-64 bg-panel-light dark:bg-panel-dark border-r border-slate-300 dark:border-slate-700 p-4 flex flex-col">
+    <div class="flex items-center gap-3 mb-6">
+      <span class="material-symbols-outlined text-primary text-3xl">account_balance_wallet</span>
+      <h1 class="text-xl font-bold">Budget Buddy</h1>
+    </div>
 
-    <!-- Main App Container -->
-    <div class="flex flex-col md:flex-row min-h-screen">
+    <nav class="flex-1 flex flex-col gap-2">
+      <button onclick="switchSection('dashboard')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"> 
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
+      </button>
+      <button onclick="switchSection('transactions')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+        <span class="material-symbols-outlined">receipt_long</span> Transactions
+      </button>
+      <button onclick="switchSection('budgets')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+        <span class="material-symbols-outlined">pie_chart</span> Budget Planning
+      </button>
+      <button onclick="switchSection('ai')" class="nav-btn flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+        <span class="material-symbols-outlined">lightbulb</span> AI Suggestions
+      </button>
+    </nav>
 
-        <!-- Sidebar Navigation -->
-        <aside class="bg-[--card-color] p-6 shadow-lg md:w-64 flex-shrink-0 flex flex-col justify-between">
+    <div class="mt-4">
+      <button id="themeToggle" class="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800"> 
+        <span class="material-symbols-outlined">dark_mode</span> Toggle theme
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 overflow-y-auto">
+
+    <!-- Header area with quick add -->
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-2xl font-bold">Budget Buddy</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Track expenses, manage budgets, and reach your goals.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="scrollToAdd()" class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg"><span class="material-symbols-outlined">add</span>Add Transaction</button>
+      </div>
+    </header>
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="page-section active-section">
+      <h3 class="text-lg font-semibold mb-4">Overview</h3>
+
+      <!-- Summaries -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <p class="text-sm text-slate-500">Total Income (This Month)</p>
+          <p id="totalIncome" class="text-2xl font-bold mt-1">₹0.00</p>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <p class="text-sm text-slate-500">Total Expenses (This Month)</p>
+          <p id="totalExpenses" class="text-2xl font-bold mt-1">₹0.00</p>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <p class="text-sm text-slate-500">Balance (This Month)</p>
+          <p id="balance" class="text-2xl font-bold mt-1">₹0.00</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Trend (Last 12 entries)</h4>
+          <canvas id="trendChart" height="140"></canvas>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Spending by Category</h4>
+          <canvas id="categoryChart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions -->
+    <section id="transactions" class="page-section">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Transactions</h3>
+        <div class="text-sm text-slate-500">Saved locally in your browser</div>
+      </div>
+
+      <!-- Filters & Actions -->
+      <div class="mb-4 flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <label class="text-sm">Category</label>
+          <div class="relative custom-select">
+            <button id="catSelectBtn" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary" id="catSelectIcon">category</span>
+              <span id="catSelectLabel">All</span>
+            </button>
+            <div id="catSelectList" class="custom-select-list hidden"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-sm">Type</label>
+          <select id="typeFilter" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">
+            <option value="all">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-sm">Sort</label>
+          <select id="sortBy" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">
+            <option value="date_desc">Date (newest)</option>
+            <option value="date_asc">Date (oldest)</option>
+            <option value="amount_desc">Amount (high-low)</option>
+            <option value="amount_asc">Amount (low-high)</option>
+          </select>
+        </div>
+
+        <div class="ml-auto flex items-center gap-2">
+          <button id="exportCsv" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">Export CSV</button>
+          <button id="exportJson" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900">Backup JSON</button>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form + Recurring -->
+      <div class="mb-4 p-4 bg-white dark:bg-slate-900 rounded-xl border">
+        <form id="addForm" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input required type="date" id="tDate" class="px-3 py-2 rounded-lg border" />
+          <input required type="text" id="tDesc" placeholder="Description" class="px-3 py-2 rounded-lg border" />
+
+          <!-- category input replaced with custom small select that includes icons -->
+          <div class="relative">
+            <button type="button" id="miniCatBtn" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 flex items-center gap-2 w-full">
+              <span class="material-symbols-outlined text-primary" id="miniCatIcon">category</span>
+              <span id="miniCatLabel">Food</span>
+            </button>
+            <div id="miniCatList" class="custom-select-list hidden"></div>
+          </div>
+
+          <div class="flex gap-2">
+            <input required type="number" step="0.01" id="tAmount" placeholder="Amount (positive = income, negative = expense)" class="px-3 py-2 rounded-lg border w-full" />
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg">Add</button>
+          </div>
+        </form>
+
+        <!-- Recurring template -->
+        <details class="mt-3 bg-slate-50 dark:bg-slate-800 p-3 rounded"><summary class="cursor-pointer">Create recurring transaction template</summary>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-3">
+            <input id="rDesc" placeholder="Description" class="px-3 py-2 rounded-lg border" />
             <div>
-                <div class="text-xl font-bold text-[--primary] mb-8" data-lang-key="appName">Business Budget Buddy</div>
-                <div class="text-xs text-[--text-secondary] mb-4" id="userIdDisplay"></div>
-                <nav>
-                    <ul>
-                        <li class="nav-item mb-2">
-                            <a href="#dashboard" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="dashboard">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span data-lang-key="dashboard">Dashboard</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#income" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="income">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span data-lang-key="income">Income</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#expenses" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="expenses">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span data-lang-key="expenses">Expenses</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#reports" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="reports">
-                                <i class="fas fa-chart-pie"></i>
-                                <span data-lang-key="reports">Reports</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#budgets" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="budgets">
-                                <i class="fas fa-piggy-bank"></i>
-                                <span data-lang-key="budgets">Budgets</span>
-                            </a>
-                        </li>
-                        <li class="nav-item mb-2">
-                            <a href="#settings" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer" data-page="settings">
-                                <i class="fas fa-cog"></i>
-                                <span data-lang-key="settings">Settings</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+              <button id="rCatBtn" type="button" class="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 flex items-center gap-2 w-full"><span class="material-symbols-outlined text-primary" id="rCatIcon">category</span><span id="rCatLabel">Food</span></button>
+              <div id="rCatList" class="custom-select-list hidden"></div>
             </div>
-            
-            <!-- Dark Mode and Language Switcher -->
-            <div class="mt-8">
-                <div class="flex items-center justify-between mb-4 p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                    <span data-lang-key="darkMode">Dark Mode</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" value="" class="sr-only peer" id="darkModeToggle">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[--primary]"></div>
-                    </label>
-                </div>
-                <div class="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                    <span data-lang-key="language">Language</span>
-                    <select id="language-switcher" class="bg-transparent text-sm rounded-lg border-none focus:ring-0 focus:outline-none">
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी</option>
-                        <option value="te">తెలుగు</option>
-                        <option value="ta">தமிழ்</option>
-                        <option value="bn">বাংলা</option>
-                    </select>
-                </div>
-            </div>
-        </aside>
+            <input id="rAmount" type="number" step="0.01" placeholder="Amount" class="px-3 py-2 rounded-lg border" />
+            <select id="rFrequency" class="px-3 py-2 rounded-lg border">
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="daily">Daily</option>
+            </select>
+            <button id="saveRecurring" class="px-4 py-2 bg-primary text-white rounded-lg md:col-span-4">Save Recurring Template</button>
+          </div>
+        </details>
+      </div>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 p-6 transition-transform duration-300">
-            <!-- Loading and Message Modals -->
-            <div id="loading-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
-                <div class="flex flex-col items-center p-6 rounded-lg bg-[--card-color] text-[--text-color]">
-                    <i class="fas fa-spinner animate-spin text-3xl text-[--primary] mb-4"></i>
-                    <p data-lang-key="loading">Loading...</p>
-                </div>
-            </div>
+      <div id="transactionsList" class="space-y-2"></div>
+    </section>
 
-            <div id="message-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-50 hidden">
-                <div class="bg-[--card-color] text-[--text-color] p-6 rounded-lg shadow-xl w-80">
-                    <h3 id="modal-title" class="font-bold text-xl mb-4"></h3>
-                    <p id="modal-message" class="text-sm text-[--text-secondary] mb-6"></p>
-                    <div class="flex justify-end space-x-2">
-                        <button id="modal-confirm-btn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors hidden" data-lang-key="confirm">Confirm</button>
-                        <button id="modal-close-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="close">Close</button>
-                    </div>
-                </div>
-            </div>
+    <!-- Budget Planning -->
+    <section id="budgets" class="page-section">
+      <h3 class="text-lg font-semibold mb-4">Budget Planning</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Create Budget</h4>
+          <form id="budgetForm" class="grid gap-2">
+            <input id="bCategory" placeholder="Category" class="px-3 py-2 rounded-lg border" />
+            <input id="bAmount" type="number" step="0.01" placeholder="Budget Amount" class="px-3 py-2 rounded-lg border" />
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg">Save Budget</button>
+          </form>
+        </div>
+        <div class="p-4 bg-white dark:bg-slate-900 rounded-xl border">
+          <h4 class="font-semibold mb-2">Budgets Overview</h4>
+          <div id="budgetsList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
 
-            <section id="dashboard" class="page active">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="dashboardTitle">Dashboard Overview</h2>
-                
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="revenueCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Revenue</h3>
-                        <p id="totalRevenue" class="text-3xl font-bold text-[--positive]">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="expensesCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Expenses</h3>
-                        <p id="totalExpenses" class="text-3xl font-bold text-[--negative]">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="profitCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Profit / Loss</h3>
-                        <p id="profitOrLoss" class="text-3xl font-bold">₹0.00</p>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md hover:scale-105 transition-transform" data-lang-key="cashFlowCard">
-                        <h3 class="text-lg font-semibold text-[--text-secondary] mb-2">Cash Flow</h3>
-                        <p id="cashFlow" class="text-3xl font-bold">₹0.00</p>
-                    </div>
-                </div>
+    <!-- AI Suggestions -->
+    <section id="ai" class="page-section">
+      <h3 class="text-lg font-semibold mb-4">AI Suggestions</h3>
+      <div id="aiList" class="space-y-3"></div>
+    </section>
 
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="revenueGrowthChart">Revenue & Expenses Growth</h3>
-                        <canvas id="revenueExpensesChart"></canvas>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="expenseBreakdownChart">Expense Breakdown by Category</h3>
-                        <canvas id="expensePieChart"></canvas>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="income" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="incomeTitle">Income Management</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="income-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="incomeDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <input type="number" id="incomeAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <select id="incomeCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="sales" data-lang-key="sales">Sales</option>
-                            <option value="services" data-lang-key="services">Services</option>
-                            <option value="investments" data-lang-key="investments">Investments</option>
-                            <option value="funding" data-lang-key="funding">Funding</option>
-                        </select>
-                        <button type="submit" class="bg-[--positive] text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition-colors" data-lang-key="addIncome">Add Income</button>
-                    </form>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-[--card-color] rounded-lg">
-                            <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
-                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
-                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
-                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
-                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="income-table-body" class="divide-y divide-[--border-color]">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="expenses" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="expensesTitle">Expense Tracking</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <input type="text" id="expenseDescription" placeholder="Description" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <input type="number" id="expenseAmount" placeholder="Amount" required class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                        <select id="expenseCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="operations" data-lang-key="operations">Operations</option>
-                            <option value="payroll" data-lang-key="payroll">Payroll</option>
-                            <option value="marketing" data-lang-key="marketing">Marketing</option>
-                            <option value="utilities" data-lang-key="utilities">Utilities</option>
-                            <option value="materials" data-lang-key="materials">Raw Materials</option>
-                            <option value="other" data-lang-key="other">Other</option>
-                        </select>
-                        <button type="submit" class="bg-[--negative] text-white p-3 rounded-lg font-semibold hover:bg-red-700 transition-colors" data-lang-key="addExpense">Add Expense</button>
-                    </form>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-[--card-color] rounded-lg">
-                            <thead>
-                                <tr class="bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    <th class="py-3 px-4" data-lang-key="tableDate">Date</th>
-                                    <th class="py-3 px-4" data-lang-key="tableDescription">Description</th>
-                                    <th class="py-3 px-4" data-lang-key="tableCategory">Category</th>
-                                    <th class="py-3 px-4" data-lang-key="tableAmount">Amount</th>
-                                    <th class="py-3 px-4" data-lang-key="tableActions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expense-table-body" class="divide-y divide-[--border-color]">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="reports" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="reportsTitle">Reports & Analytics</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="monthlyReport">Monthly Report</h3>
-                        <canvas id="monthlyReportChart"></canvas>
-                    </div>
-                    <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-semibold mb-4" data-lang-key="quarterlyReport">Quarterly Report</h3>
-                        <canvas id="quarterlyReportChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md flex justify-end space-x-4">
-                    <button id="exportCsvBtn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors" data-lang-key="exportCsv">Export as CSV</button>
-                    <button id="downloadPdfBtn" class="bg-[--primary] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors" data-lang-key="downloadPdf">Download Statement</button>
-                </div>
-            </section>
-            
-            <section id="budgets" class="page hidden">
-                <h2 class="text-3xl font-bold mb-6 text-[--primary]" data-lang-key="budgetsTitle">Budget Goals & Alerts</h2>
-                <div class="bg-[--card-color] p-6 rounded-lg shadow-md">
-                    <form id="budget-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <select id="budgetCategory" class="p-3 rounded-lg border border-[--border-color] bg-transparent focus:outline-none focus:ring-2 focus:ring-[--primary]">
-                            <option value="operations" data-lang-key="operations">Operations</option>
-                            <option value="payroll" data-lang-key="payroll">Payroll</option>
-                            <option value="marketing" data-lang-key="marketing">Marketing</option>
-                            <option value="utilities" data-lang-key="utilities">Utilities</option>
-                            <option value="materials" data-lang-key="materials">Raw Materials</option>
-                            <option value="other" data-lang-key="other">Other</option>
-                        </select>
-                        <input type="number" id="budgetAmount" placeholder="Budget Amount" required class="p-3 rounded-lg border bor
+  </main>
+</div>
+
+<script>
+  // State management using localStorage
+  const LS_KEY = 'budgetBuddy_v1';
+  const defaultState = { transactions: [], budgets: {}, recurring: [] };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : defaultState;
+    } catch (e) { return defaultState; }
+  }
+  function saveState(s) { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+
+  // Category Icons
+  const categoryIcons = {
+    Food: 'restaurant',
+    Groceries: 'shopping_cart',
+    Transport: 'directions_car',
+    Bills: 'receipt',
+    Shopping: 'shopping_bag',
+    Health: 'health_and_safety',
+    Education: 'school',
+    Rent: 'home',
+    Subscriptions: 'payments',
+    Income: 'savings',
+    Other: 'category'
+  };
+  const categories = Object.keys(categoryIcons);
+  const budgetIcons = categoryIcons;
+
+  let state = loadState();
+
+  // UI helpers
+  function currency(n){ return (n>=0?"₹":"-₹") + Math.abs(n).toFixed(2); }
+
+  // Utility: safely create element with text
+  function el(tag, text, cls){ const e = document.createElement(tag); if(text!==undefined) e.textContent = text; if(cls) e.className = cls; return e; }
+
+  // Populate custom category lists
+  function buildCategoryList(containerId, targetLabelId, targetIconId){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    categories.forEach(cat =>{
+      const item = document.createElement('div');
+      item.className = 'custom-select-item';
+      item.innerHTML = `<span class="material-symbols-outlined text-primary">${categoryIcons[cat]}</span><span>${cat}</span>`;
+      item.addEventListener('click', ()=>{
+        document.getElementById(targetLabelId).textContent = cat;
+        document.getElementById(targetIconId).textContent = categoryIcons[cat];
+        container.classList.add('hidden');
+      });
+      container.appendChild(item);
+    });
+  }
+
+  // Filters state
+  let activeCategoryFilter = 'All';
+
+  // Rendering transactions with filters & sorting
+  function renderTransactions(){
+    const elList = document.getElementById('transactionsList');
+    elList.innerHTML='';
+    let list = state.transactions.slice();
+
+    // Apply category filter
+    if(activeCategoryFilter !== 'All') list = list.filter(t=>t.category===activeCategoryFilter);
+    // Type filter
+    const type = document.getElementById('typeFilter').value;
+    if(type==='income') list = list.filter(t=>t.amount>0);
+    if(type==='expense') list = list.filter(t=>t.amount<0);
+
+    // Sorting
+    const sortBy = document.getElementById('sortBy').value;
+    if(sortBy==='date_desc') list.sort((a,b)=> new Date(b.date) - new Date(a.date));
+    if(sortBy==='date_asc') list.sort((a,b)=> new Date(a.date) - new Date(b.date));
+    if(sortBy==='amount_desc') list.sort((a,b)=> Math.abs(b.amount)-Math.abs(a.amount));
+    if(sortBy==='amount_asc') list.sort((a,b)=> Math.abs(a.amount)-Math.abs(b.amount));
+
+    if(list.length===0){ elList.appendChild(el('div','No transactions yet.','p-4 bg-white dark:bg-slate-900 rounded-xl border text-slate-500')); return; }
+
+    list.slice().reverse().forEach((t,i)=>{
+      const row = document.createElement('div');
+      row.className='p-3 bg-white dark:bg-slate-900 rounded-xl border flex items-center justify-between';
+
+      const left = document.createElement('div');
+      left.innerHTML = `<div class="text-sm text-slate-500">${t.date}</div>`;
+      const descRow = document.createElement('div'); descRow.className='font-medium flex items-center gap-2';
+      const icon = document.createElement('span'); icon.className='material-symbols-outlined text-primary'; icon.textContent = categoryIcons[t.category]||'category';
+      descRow.appendChild(icon);
+      descRow.appendChild(el('span', t.desc));
+      left.appendChild(descRow);
+      left.appendChild(el('div', t.category, 'text-xs text-slate-500'));
+
+      const right = document.createElement('div'); right.className='text-right';
+      const amountSign = t.amount<0? '-':'+';
+      const amountCls = t.amount<0? 'text-red-500':'text-green-500';
+      const amt = document.createElement('div'); amt.className = 'font-semibold '+amountCls; amt.textContent = `${amountSign}₹${Math.abs(t.amount).toFixed(2)}`;
+      right.appendChild(amt);
+
+      const controls = document.createElement('div'); controls.className='flex gap-2 justify-end mt-2';
+      const delBtn = document.createElement('button'); delBtn.className='text-xs px-2 py-1 rounded bg-slate-100 dark:bg-slate-800'; delBtn.textContent='Delete';
+      delBtn.addEventListener('click', ()=>{ removeTransaction(state.transactions.length-1-i); });
+      controls.appendChild(delBtn);
+      right.appendChild(controls);
+
+      row.appendChild(left); row.appendChild(right);
+      elList.appendChild(row);
+    });
+  }
+
+  function removeTransaction(idx){
+    if(!confirm('Delete this transaction?')) return;
+    state.transactions.splice(idx,1);
+    saveState(state); renderAll();
+  }
+
+  function addTransaction(t){ state.transactions.push(t); saveState(state); renderAll(); }
+
+  // Budgets
+  function renderBudgets(){
+    const budgetsContainer = document.getElementById('budgetsList'); budgetsContainer.innerHTML='';
+    const keys = Object.keys(state.budgets);
+    if(keys.length===0) { budgetsContainer.appendChild(el('div','No budgets yet.','text-slate-500')); return; }
+    keys.forEach(k=>{
+      const item = document.createElement('div');
+      item.className='p-3 bg-white dark:bg-slate-900 rounded-xl border flex items-center justify-between';
+      const spent = state.transactions.filter(t=>t.category===k && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
+      const limit = state.budgets[k];
+      const pct = Math.min(100, Math.round((spent/limit)*100||0));
+
+      const left = document.createElement('div');
+      const icon = document.createElement('span'); icon.className='material-symbols-outlined text-primary'; icon.textContent = budgetIcons[k]||'category';
+      left.appendChild(icon);
+      const info = document.createElement('div');
+      info.appendChild(el('div', k, 'font-medium'));
+      info.appendChild(el('div', `${currency(-spent)} of ${currency(limit)}`, 'text-xs text-slate-500'));
+      left.appendChild(info);
+
+      const right = document.createElement('div');
+      right.innerHTML = `<div class="text-xs ${spent>limit? 'text-red-500':'text-slate-500'}">${spent>limit? 'Overspent':'On track'}</div><div class="h-2 bg-slate-200 rounded-full mt-2" style="width:120px"><div class="h-2 bg-primary rounded-full" style="width:${pct}%"></div></div>`;
+
+      item.appendChild(left); item.appendChild(right); budgetsContainer.appendChild(item);
+    });
+  }
+
+  // Aggregations & summaries
+  function computeTotals(period='month'){
+    const now = new Date();
+    let start;
+    if(period==='month'){ start = new Date(now.getFullYear(), now.getMonth(), 1); }
+    if(period==='week'){ const d = now.getDay(); start = new Date(now); start.setDate(now.getDate()-d); start.setHours(0,0,0,0);} 
+    if(period==='day'){ start = new Date(now); start.setHours(0,0,0,0); }
+
+    const income = state.transactions.filter(t=> new Date(t.date) >= start && t.amount>0).reduce((s,x)=>s+x.amount,0);
+    const expenses = state.transactions.filter(t=> new Date(t.date) >= start && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
+    const bal = income - expenses;
+    document.getElementById('totalIncome').textContent = '₹' + income.toFixed(2);
+    document.getElementById('totalExpenses').textContent = '₹' + expenses.toFixed(2);
+    document.getElementById('balance').textContent = '₹' + bal.toFixed(2);
+    return {income, expenses, bal};
+  }
+
+  // Charts
+  let trendChart=null, categoryChart=null;
+  function renderCharts(){
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    const recent = state.transactions.slice(-12);
+    const labels = recent.map(r=>r.date);
+    const data = recent.map(r=>r.amount);
+    if(trendChart) trendChart.destroy();
+    trendChart = new Chart(ctx, { type:'bar', data:{ labels, datasets:[{label:'Amount', data, backgroundColor: data.map(v=> v<0? 'rgba(239,68,68,0.7)':'rgba(34,197,94,0.7)') }] }, options:{ responsive:true, maintainAspectRatio:true } });
+
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    const cats = {};
+    state.transactions.forEach(t=>{ cats[t.category] = (cats[t.category]||0) + (t.amount<0? Math.abs(t.amount):0); });
+    const catLabels = Object.keys(cats);
+    const catData = Object.values(cats);
+    if(categoryChart) categoryChart.destroy();
+    categoryChart = new Chart(catCtx, { type:'doughnut', data:{ labels:catLabels, datasets:[{data:catData, backgroundColor: ['#60A5FA','#FBBF24','#34D399','#FCA5A5','#A78BFA','#F97316'] }] }, options:{ responsive:true, maintainAspectRatio:true } });
+  }
+
+  // Better AI Suggestions
+  function renderAISuggestions(){
+    const aiContainer = document.getElementById('aiList'); aiContainer.innerHTML='';
+    const suggestions = [];
+    const totalsMonth = computeTotals('month');
+    if(totalsMonth.bal < 500) suggestions.push({title:'Low Balance Warning', body:`Your balance is ${currency(totalsMonth.bal)}. Consider pausing non-essential expenses.`});
+
+    // weekly vs last week
+    const now = new Date();
+    const thisWeekStart = new Date(now); thisWeekStart.setDate(now.getDate()-now.getDay()); thisWeekStart.setHours(0,0,0,0);
+    const lastWeekStart = new Date(thisWeekStart); lastWeekStart.setDate(thisWeekStart.getDate()-7);
+    const thisWeekExp = state.transactions.filter(t=> new Date(t.date) >= thisWeekStart && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
+    const lastWeekExp = state.transactions.filter(t=> new Date(t.date) >= lastWeekStart && new Date(t.date) < thisWeekStart && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
+    if(lastWeekExp>0){ const pct = Math.round(((thisWeekExp-lastWeekExp)/lastWeekExp)*100); if(pct>10) suggestions.push({title:'Spending Increased', body:`Spending this week is ${pct}% higher than last week.`}); }
+
+    // subscription detection
+    const subs = state.transactions.filter(t=> t.category==='Subscriptions' || t.desc.toLowerCase().includes('subscription'));
+    const subsMonthly = subs.length>0 ? subs.reduce((s,x)=>s+Math.abs(x.amount),0) : 0;
+    if(subsMonthly>500) suggestions.push({title:'High Subscription Cost', body:`You pay about ${currency(-subsMonthly)} on subscriptions.`});
+
+    // unusually large single expense
+    const largest = state.transactions.reduce((max,t)=> Math.max(max, Math.abs(t.amount)),0);
+    if(largest>10000) suggestions.push({title:'Large Expense Detected', body:`A single transaction exceeded ₹10,000. Check if this was intentional.`});
+
+    // overspent budgets
+    Object.keys(state.budgets).forEach(k=>{
+      const spent = state.transactions.filter(t=>t.category===k && t.amount<0).reduce((s,x)=>s+Math.abs(x.amount),0);
+      if(spent > state.budgets[k]) suggestions.push({title:`Budget exceeded: ${k}`, body:`You've spent ${currency(-spent)} which exceeds budget of ${currency(state.budgets[k])}.`});
+    });
+
+    if(suggestions.length===0) aiContainer.appendChild(el('div','No suggestions right now — you are on track.','p-4 bg-white dark:bg-slate-900 rounded-xl border text-slate-500'));
+    else suggestions.forEach(s=>{ const card = document.createElement('div'); card.className='p-4 bg-white dark:bg-slate-900 rounded-xl border'; card.appendChild(el('div',s.title,'font-semibold')); card.appendChild(el('div',s.body,'text-sm text-slate-500 mt-1')); aiContainer.appendChild(card); });
+  }
+
+  // Export functions
+  function exportCSV(){
+    const rows = [['date','desc','category','amount']];
+    state.transactions.forEach(t=> rows.push([t.date, t.desc, t.category, t.amount]));
+    const csv = rows.map(r=> r.map(c=> '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='transactions.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+  function exportJSON(){
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='budgetBuddy_backup.json'; a.click(); URL.revokeObjectURL(url);
+  }
+
+  // Recurring templates
+  function saveRecurringTemplate(){
+    const desc = document.getElementById('rDesc').value.trim();
+    const cat = document.getElementById('rCatLabel').textContent || 'Other';
+    const amt = parseFloat(document.getElementById('rAmount').value);
+    const freq = document.getElementById('rFrequency').value;
+    if(!desc||isNaN(amt)){ alert('Provide recurring description and amount'); return; }
+    state.recurring = state.recurring||[];
+    state.recurring.push({desc, category:cat, amount:amt, frequency:freq, created: new Date().toISOString().slice(0,10)});
+    saveState(state); alert('Recurring template saved'); renderAll();
+  }
+
+  function applyRecurringUpToToday(){
+    // generate occurrences from template creation date to today (monthly only, limited)
+    if(!state.recurring||state.recurring.length===0) return;
+    const today = new Date();
+    state.recurring.forEach(tmpl =>{
+      const created = new Date(tmpl.created);
+      let cur = new Date(created);
+      const addFunc = tmpl.frequency==='monthly' ? (d)=>{ d.setMonth(d.getMonth()+1); } : tmpl.frequency==='weekly' ? (d)=>{ d.setDate(d.getDate()+7);} : (d)=>{ d.setDate(d.getDate()+1); };
+      // add occurrences until today (limit 24 to avoid huge loops)
+      let count=0;
+      while(cur <= today && count<24){
+        // check if an exact transaction exists
+        const dateStr = cur.toISOString().slice(0,10);
+        const exists = state.transactions.some(x=> x.desc===tmpl.desc && x.category===tmpl.category && x.amount===tmpl.amount && x.date===dateStr);
+        if(!exists){ state.transactions.push({date: dateStr, desc: tmpl.desc, category: tmpl.category, amount: tmpl.amount}); }
+        addFunc(cur);
+        count++;
+      }
+    });
+    saveState(state); renderAll();
+  }
+
+  // Render all
+  function renderAll(){ renderTransactions(); renderBudgets(); computeTotals('month'); renderCharts(); renderAISuggestions(); }
+
+  // Form handlers
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // build custom category lists
+    buildCategoryList('catSelectList','catSelectLabel','catSelectIcon');
+    buildCategoryList('miniCatList','miniCatLabel','miniCatIcon');
+    buildCategoryList('rCatList','rCatLabel','rCatIcon');
+
+    // toggle lists
+    document.getElementById('catSelectBtn').addEventListener('click', ()=> document.getElementById('catSelectList').classList.toggle('hidden'));
+    document.getElementById('miniCatBtn').addEventListener('click', ()=> document.getElementById('miniCatList').classList.toggle('hidden'));
+    document.getElementById('rCatBtn').addEventListener('click', ()=> document.getElementById('rCatList').classList.toggle('hidden'));
+
+    // filters change
+    document.getElementById('typeFilter').addEventListener('change', renderTransactions);
+    document.getElementById('sortBy').addEventListener('change', renderTransactions);
+
+    // category list selection also updates activeCategoryFilter when chosen from main list
+    document.getElementById('catSelectList').addEventListener('click', ()=>{
+      const label = document.getElementById('catSelectLabel').textContent;
+      activeCategoryFilter = label==='All' ? 'All' : label;
+      renderTransactions();
+    });
+
+    // exporters
+    document.getElementById('exportCsv').addEventListener('click', exportCSV);
+    document.getElementById('exportJson').addEventListener('click', exportJSON);
+
+    // form submits
+    document.getElementById('addForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const date = document.getElementById('tDate').value || new Date().toISOString().slice(0,10);
+      const desc = document.getElementById('tDesc').value || 'No description';
+      const category = document.getElementById('miniCatLabel').textContent || 'Food';
+      let amount = parseFloat(document.getElementById('tAmount').value);
+      if(isNaN(amount)){ alert('Enter valid amount'); return; }
+      addTransaction({date, desc, category, amount});
+      document.getElementById('addForm').reset();
+      // restore mini cat to default
+      document.getElementById('miniCatLabel').textContent='Food'; document.getElementById('miniCatIcon').textContent=categoryIcons['Food'];
+    });
+
+    document.getElementById('budgetForm').addEventListener('submit', e=>{ e.preventDefault(); const cat=document.getElementById('bCategory').value.trim(); const amt=parseFloat(document.getElementById('bAmount').value); if(!cat||isNaN(amt)){ alert('Provide category and amount'); return;} state.budgets[cat]=amt; saveState(state); renderAll(); document.getElementById('budgetForm').reset(); });
+
+    document.getElementById('saveRecurring').addEventListener('click', (e)=>{ e.preventDefault(); saveRecurringTemplate(); });
+
+    // recurring apply
+    applyRecurringUpToToday();
+
+    // theme
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click',()=>{ document.documentElement.classList.toggle('dark'); localStorage.setItem('budgetBuddy_theme', document.documentElement.classList.contains('dark')? 'dark':'light'); });
+    (function(){ const t = localStorage.getItem('budgetBuddy_theme'); if(t==='dark') document.documentElement.classList.add('dark'); })();
+
+    // initial render
+    renderAll();
+  });
+
+  // Navigation helpers
+  function switchSection(sectionID){ document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active-section')); document.getElementById(sectionID).classList.add('active-section'); window.scrollTo({top:0,behavior:'smooth'}); }
+  function scrollToAdd(){ switchSection('transactions'); window.scrollTo({top: document.getElementById('addForm').offsetTop - 20, behavior:'smooth'}); }
+
+</script>
+</body>
+</html>
